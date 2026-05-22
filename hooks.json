@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "./scripts/check-git-cleanliness.sh warn-dirty",
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "./scripts/check-git-cleanliness.sh return-default-branch",
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "./scripts/check-git-cleanliness.sh guard-push",
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}
