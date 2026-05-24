@@ -95,10 +95,16 @@ Stop before implementation if:
 - the branch flow does not start from the current default branch
 - after `git worktree prune`, a different-issue `feature/issue-...` branch exists in a sibling worktree and this BUILDER does not have a `WORKTREE_PATH` for this issue (HARD STOP; route back to CONDUCTOR)
 
-If branch cleanup is in scope, run the local helper in dry-run mode first:
+If branch cleanup is in scope, and `scripts/cleanup-redundant-local-branches.sh` exists in your repo, run the local helper in dry-run mode first:
 
 ```bash
 scripts/cleanup-redundant-local-branches.sh branch-name [branch-name ...]
+```
+
+Otherwise, manually delete the merged branch with:
+
+```bash
+git branch -d branch-name && git push origin --delete branch-name
 ```
 
 ## Step 1.75: Cross-Repo Target Detection
