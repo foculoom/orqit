@@ -33,4 +33,4 @@ Replace these with your studio's values:
 | `{your-ratified-strategy-issue}` | Your strategy ratification issue number |
 | `{your-dtwin-path}` | Your `.dtwin/` path, or remove the reference |
 
-These are intentional template markers — orqit is an opinionated starting point, not a zero-config plugin.
+These are intentional template markers for full-power customization — the skills work out of the box without any setup. Agent files have optional placeholders that unlock additional capabilities (digital-twin sync, org-specific tracking) when filled in, but are not required for day-to-day use.

@@ -46,16 +46,16 @@ This skill owns the full session lifecycle referenced by `.github/copilot-instru
      `⚠️ Known mistake patterns (last 7 days): <root cause> [session: <id>]`
    - If no results, skip silently.
 
-5. **dtwin rule surfacing (session-start, cold-start recommended):** Run `python3 -m dtwin list-rules --status pending`. BUILDER adds this to the session-start block; whether to gate on cold-start vs every-resume is BUILDER's discretion (document the choice inline if changing defaults). Apply threshold:
+5. **dtwin rule surfacing (session-start, cold-start recommended, optional):** If `python3 -m dtwin` is available in your environment, run `python3 -m dtwin list-rules --status pending`; otherwise skip this step silently. BUILDER adds this to the session-start block; whether to gate on cold-start vs every-resume is BUILDER's discretion (document the choice inline if changing defaults). Apply threshold:
    - Pending count ≥ 10: surface top-5 titles + rule-ids to founder for approve/reject before proceeding.
    - Pending count 5–9: add a one-line note to the session digest ("N dtwin rules pending — review via `list-rules` when convenient") without blocking.
    - Pending count < 5: no action needed.
 
-   Use `python3 -m dtwin get-candidate-rules` for the legacy view if needed. (Note: `list-memories` is **not** a dtwin subcommand — verified 2026-05-18 against CLI surface.)
+   If `python3 -m dtwin` is available, use `python3 -m dtwin get-candidate-rules` for the legacy view if needed. (Note: `list-memories` is **not** a dtwin subcommand — verified 2026-05-18 against CLI surface.)
 
-   **Advisory drift check:** Run `python3 -m dtwin list-rules --status approved | wc -l` and compare roughly to the count of Automatable rows in `automation-registry/SKILL.md`. If the registry is materially longer, remind founder: recent automations may need a paired `python3 -m dtwin add-rule --approve --rule-type workflow "title" "body"`.
+   **Advisory drift check (optional):** If `python3 -m dtwin` is available, run `python3 -m dtwin list-rules --status approved | wc -l` and compare roughly to the count of Automatable rows in `automation-registry/SKILL.md`. If the registry is materially longer, remind founder: recent automations may need a paired `python3 -m dtwin add-rule --approve --rule-type workflow "title" "body"`.
 
-6. **Usage check (optional, at session start):** If `COPILOT_PLAN_LIMIT` is set, run `scripts/check-copilot-usage.sh --model opus --threshold 70` to check Opus burn before dispatching REVIEWER/PLANNER subagents. Exit 2 = drop to Sonnet; exit 3 = block Opus. See `.github/skills/usage/SKILL.md`.
+6. **Usage check (optional, at session start):** If `COPILOT_PLAN_LIMIT` is set and `scripts/check-copilot-usage.sh` exists in your repo, run `scripts/check-copilot-usage.sh --model opus --threshold 70` to check Opus burn before dispatching REVIEWER/PLANNER subagents. Exit 2 = drop to Sonnet; exit 3 = block Opus. See `.github/skills/usage/SKILL.md`.
 
 7. **Do NOT re-run setup** that was completed in prior sessions:
    - Do not re-clone repos
@@ -68,9 +68,11 @@ Follow these steps in order to resume work efficiently.
 
 ### Step 1: Load prior context from digital twin
 
-Call `tom-continuationPrompt` with the topic or issue number. This returns a context pack from all prior sessions.
+If a digital-twin/continuation MCP tool is present in your active tool list, call it with the topic or issue number. This returns a context pack from all prior sessions.
 
-If no topic is provided, call `tom-continuationPrompt` without a topic to get the most recent work context.
+If no topic is provided, call it without a topic to get the most recent work context.
+
+If no such MCP tool is available, skip to Step 2.
 
 ### Step 2: Query session store for recent sessions
 
@@ -193,7 +195,7 @@ Keep RESUME.md **≤ 1 500 words / ≤ 8 000 tokens**. Use exactly these four na
 
 > **Scratch state:** RESUME.md is ephemeral session state — do not stage or commit it. Preferred path is `session/RESUME.md` (already gitignored). A root-level `RESUME.md` is also gitignored as a belt-and-braces guard.
 
-1. **Before `/clear`:** complete any required session-end obligations for this repo (e.g., `tom-syncTwin` if applicable). If obligations cannot be completed before the reset, capture them as bullets in **Context-critical facts** so the fresh context knows to run them.
+1. **Before `/clear`:** complete any required session-end obligations for this repo (e.g., if a digital-twin sync MCP tool is present in your active tool list, call it to sync context). If obligations cannot be completed before the reset, capture them as bullets in **Context-critical facts** so the fresh context knows to run them.
 2. Write `session/RESUME.md`: use `edit` or `create` at path `session/RESUME.md`.
 3. Run `/clear` — this resets the context window completely.
 4. At the top of the new session, reload: `view session/RESUME.md`.
@@ -239,7 +241,7 @@ When wind-down triggers, **stop accepting new work** and begin the wind-down seq
 3. **Store memories** — call `store_memory` for every significant discovery this session.
 4. **Update plan.md / issue state** — capture remaining work and blockers in the GitHub issue.
 5. **Return to default branch** — follow the § Session End checklist below.
-6. **Checkpoint** — call `tom-syncTwin` to persist context for the next session.
+6. **Checkpoint** — if a digital-twin sync MCP tool is present in your active tool list, call it to persist context for the next session.
 
 **CONDUCTOR ownership:** when CONDUCTOR is driving, it owns this sequence. CONDUCTOR must surface `⚠️ WIND-DOWN: context-health checkpoint triggered — beginning end-of-session sequence` (appending the reason, e.g., `turn 10 >75%` or `turn 15 hard ceiling`) before wind-down starts, so the founder can redirect if needed. Do NOT start a new issue during wind-down.
 
@@ -262,7 +264,7 @@ Every agent profile and skill SKILL.md declares its tier as follows: skill `SKIL
 | 4 | **extra-premium** | `gpt-5.5` | 7.5× | CONDUCTOR, market-scan |
 | — | **two-pass** | per Matrix row | mixed | reviewer-qa-gate (Sonnet+Opus), qa-validate (Sonnet+Opus), brand-compliance (Sonnet+Opus) |
 
-> **Cost-guard mapping** (`scripts/check-copilot-usage.sh --tier <label>`): basic → `*haiku*`, standard → `*sonnet*`, premium → `*opus*`, extra-premium → `gpt-5.5`. Backward-compatible with `--model <glob>`.
+> **Cost-guard mapping** (if `scripts/check-copilot-usage.sh` is available: `scripts/check-copilot-usage.sh --tier <label>`): basic → `*haiku*`, standard → `*sonnet*`, premium → `*opus*`, extra-premium → `gpt-5.5`. Backward-compatible with `--model <glob>`.
 
 #### Model Routing Matrix
 
@@ -337,10 +339,10 @@ Skip if the session was purely research with no new actionable facts.
 ### 2. Sync digital twin
 
 ```
-Call tom-syncTwin with mode: "incremental"
+If a digital-twin sync MCP tool is present in your active tool list, call it with mode: "incremental"
 ```
 
-This ensures the next session can retrieve context from this one via `tom-continuationPrompt`.
+This ensures the next session can retrieve context from this one via a digital-twin continuation MCP tool, if available.
 
 ### 3. Return to default branch
 
@@ -409,7 +411,7 @@ For each untracked file shown by `git status --short`:
 Treat `.dtwin/` as protected AI-infra state, not generic scratch/residue.
 
 Before any cleanup/disposition claim about `.dtwin/`, verify from the repo root:
-1. **dtwin CLI behavior** (both forms are valid):  
+1. **dtwin CLI behavior** (if `python3 -m dtwin` is installed — both forms are valid):  
    `python3 -m dtwin list-rules --status pending`  
    `python3 -m dtwin --repo-root "$PWD" list-rules --status pending`
 2. **Local `.dtwin/dtwin.db` state** — confirm schema/tables and row counts are readable.

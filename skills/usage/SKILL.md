@@ -18,9 +18,13 @@ Mechanical skill — occasional API call only. No judgment required; haiku is ap
 
 Run at session start when CONDUCTOR cost-guard triggers, or manually via `/usage` to check current Opus burn before spawning REVIEWER/PLANNER subagents.
 
+If `scripts/check-copilot-usage.sh` exists in your repo, run:
+
 ```bash
 scripts/check-copilot-usage.sh --model opus --threshold 70
 ```
+
+Otherwise, check usage manually via the GitHub Copilot web UI at https://github.com/settings/copilot.
 
 ## Prerequisites
 
@@ -53,7 +57,9 @@ export COPILOT_USAGE_SCOPE=org
 export COPILOT_USAGE_ORG={your-github-org}
 export COPILOT_PLAN_LIMIT=300
 export COPILOT_PLAN_TIER=Business
+# If scripts/check-copilot-usage.sh exists in your repo:
 scripts/check-copilot-usage.sh --model opus --threshold 70
+# Otherwise, check usage manually via the GitHub Copilot web UI at https://github.com/settings/copilot
 ```
 
 If you see a 403/404, the script prints a detailed diagnostic to stderr with the required token permissions.
@@ -129,7 +135,7 @@ _(stderr: `Warning: COPILOT_PLAN_LIMIT is not set. Cannot compute burn percentag
 
 ## CONDUCTOR integration
 
-CONDUCTOR invokes `scripts/check-copilot-usage.sh --model opus --threshold 70` and gates on exit code:
+CONDUCTOR invokes `scripts/check-copilot-usage.sh --model opus --threshold 70` (if available in your repo) and gates on exit code:
 
 - **Exit 0** — ok/unknown: proceed with default model routing
 - **Exit 2** — warning (≥70% Opus burn): drop REVIEWER to `claude-sonnet-4.6 --effort xhigh`
@@ -139,7 +145,7 @@ See `.github/agents/conductor.agent.md` § Cost guard for the full gating rule, 
 
 ## Script reference
 
-Full implementation: `scripts/check-copilot-usage.sh`
+Full implementation: `scripts/check-copilot-usage.sh` (optional — add to your repo for automated cost-guard). If the script is not present, use the GitHub Copilot web UI at https://github.com/settings/copilot instead.
 
 The script:
 - Resolves username via `gh api user --jq '.login'` (never hardcoded)

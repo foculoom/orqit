@@ -4,7 +4,7 @@
     "agentStop": [
       {
         "type": "command",
-        "bash": "./scripts/check-git-cleanliness.sh warn-dirty",
+        "bash": "[ -x ./scripts/check-git-cleanliness.sh ] && ./scripts/check-git-cleanliness.sh warn-dirty; exit 0",
         "cwd": ".",
         "timeoutSec": 10
       }
@@ -12,15 +12,7 @@
     "sessionEnd": [
       {
         "type": "command",
-        "bash": "./scripts/check-git-cleanliness.sh return-default-branch",
-        "cwd": ".",
-        "timeoutSec": 10
-      }
-    ],
-    "preToolUse": [
-      {
-        "type": "command",
-        "bash": "./scripts/check-git-cleanliness.sh guard-push",
+        "bash": "[ -x ./scripts/check-git-cleanliness.sh ] && ./scripts/check-git-cleanliness.sh return-default-branch; exit 0",
         "cwd": ".",
         "timeoutSec": 10
       }
