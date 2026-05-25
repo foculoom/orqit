@@ -1,6 +1,6 @@
 ---
 name: qa-validate
-description: QA validation workflow for any Foculoom product. Use this when asked to validate, test, or capture evidence for a build. Automatically detects platform (Godot, iOS, web) and applies the correct capture procedure.
+description: QA validation workflow for any product. Use this when asked to validate, test, or capture evidence for a build. Automatically detects platform (Godot, iOS, web) and applies the correct capture procedure.
 tier: two-pass
 ---
 
@@ -9,16 +9,16 @@ tier: two-pass
 ## Model
 
 - **Preferred:** `claude-sonnet-4.6` (default); escalate to `claude-opus-4.7` for Sprite Art Gate (§2.5), Walk-Cycle Receipt Subgate (§2.5.1), and Art Director Visual Review (§3.5) — ADA-class visual judgment matches the `reviewer-qa-gate` Pass 2 standard
-- **Premium-exhausted fallback:** `/model auto` → `claude-sonnet-4.5`; for Opus-escalation steps use `claude-sonnet-4.6 --effort xhigh` + mandatory rubber-duck — see `/fallback-mode`
+- **Cost-tier fallback:** `/model auto` → `claude-sonnet-4.5`; for Opus-escalation steps use `claude-sonnet-4.6 --effort xhigh` + mandatory rubber-duck — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
-Capture build evidence for any Foculoom product.
+Capture build evidence for any product.
 
 ## Step 1: Detect platform
 
 Ask the user or infer from the issue/PR which platform:
-- **iOS** — apps (BubblePop, Skiplet via Xcode); default to physical-device validation when a reachable device exists
-- **Web** — foculoom.github.io (static HTML)
+- **iOS** — your iOS apps (via Xcode); default to physical-device validation when a reachable device exists
+- **Web** — [your static site] (static HTML)
 - **macOS** — Cairn
 
 ## Step 2: Route to platform-specific skill
@@ -32,7 +32,7 @@ Ask the user or infer from the issue/PR which platform:
 
 **Applies when:** the QA work validates new, updated, or regenerated character sprite frames or animation cycles (e.g., run cycle, jump, hit, idle frames).
 
-> ⚠️ **Why this gate exists:** A prior REVIEWER miss on sprite frames occurred because REVIEWER only evaluated frames at ~60px composite game scale. At that scale, frames with broken poses (wrong silhouette, inconsistent proportions) are indistinguishable from correct ones. Source-frame inspection at native resolution is the only reliable gate.
+> ⚠️ **Why this gate exists:** A prior REVIEWER miss on a character animation cycle occurred because REVIEWER only evaluated frames at ~60px composite game scale. At that scale, frames with broken poses (wrong silhouette, inconsistent proportions) are indistinguishable from correct ones. Source-frame inspection at native resolution is the only reliable gate.
 
 **Mandatory before any screenshot capture or in-engine validation:**
 
@@ -51,11 +51,11 @@ Ask the user or infer from the issue/PR which platform:
 
 ### Step 2.5.1 — Walk-Cycle Receipt Subgate (walk animation deliverables only)
 
-**Applies when:** the QA work validates a `walk` animation cycle for sprite-forge output (G3.1 corrective gate).
+**Applies when:** the QA work validates a `walk` animation cycle for sprite-forge output.
 
-**Readiness anchor:** `docs/releases/sprite-forge-g3-readiness.md`
-- `pinned_commit`: `34b69f5e045e0dcbee82d33c170e0148c5e834de`
-- `walk_contract_sha256`: `ffecf9817638c4b9f10b7ed0233181c958aee59d2b77444515e1acc91d5d1320`
+**Readiness anchor:** Your project's sprite-forge readiness document (e.g., `docs/releases/sprite-forge-readiness.md`)
+- `pinned_commit`: `{YOUR_PINNED_COMMIT}` — the commit of the walk validator used when this contract was established
+- `walk_contract_sha256`: `{YOUR_CONTRACT_HASH}` — the SHA256 of the walk contract file at pinned commit
 
 **Required inputs:**
 
@@ -92,7 +92,7 @@ FOR each field in REQUIRED_FIELDS:
 **Check C — contract_hash matches readiness doc**
 
 ```
-READINESS_CONTRACT_HASH = "ffecf9817638c4b9f10b7ed0233181c958aee59d2b77444515e1acc91d5d1320"
+READINESS_CONTRACT_HASH = "{YOUR_CONTRACT_HASH}"  # Replace with the SHA256 recorded in your readiness document
 IF receipt["contract_hash"] != READINESS_CONTRACT_HASH:
   FAIL "WALK-CYCLE-GATE: receipt.contract_hash mismatch — got '<value>', expected '<READINESS_CONTRACT_HASH>'"
 ```
@@ -100,12 +100,12 @@ IF receipt["contract_hash"] != READINESS_CONTRACT_HASH:
 **Check D — validator_commit provenance (best-effort)**
 
 ```
-# validator_commit is NOT emitted by the actual validator receipt (v1.0.0).
+# validator_commit may not be emitted by the current validator receipt.
 # Record this as a residual trust gap; do not FAIL on field absence.
 # IF a future validator version adds this field, enforce:
-#   IF receipt.get("validator_commit") is present AND receipt["validator_commit"] != "34b69f5e045e0dcbee82d33c170e0148c5e834de":
+#   IF receipt.get("validator_commit") is present AND receipt["validator_commit"] != "{YOUR_PINNED_COMMIT}":
 #     FAIL "WALK-CYCLE-GATE: receipt.validator_commit mismatch"
-RECORD "WALK-CYCLE-GATE: validator_commit field absent from receipt (validator v1.0.0); residual trust gap noted — contract_hash check is primary provenance anchor"
+RECORD "WALK-CYCLE-GATE: validator_commit field absent from receipt; residual trust gap noted — contract_hash check is primary provenance anchor"
 ```
 
 **Check E — REVIEWER sign-off exists and schema is valid**
@@ -126,7 +126,7 @@ FOR each field in REQUIRED_SIGNOFF_FIELDS:
 IF signoff["native_resolution_confirmed"] != true:
   FAIL "WALK-CYCLE-GATE: sign-off native_resolution_confirmed is not true"
 
-IF signoff["source_frame_commit"] != "34b69f5e045e0dcbee82d33c170e0148c5e834de":
+IF signoff["source_frame_commit"] != "{YOUR_PINNED_COMMIT}":
   FAIL "WALK-CYCLE-GATE: sign-off source_frame_commit mismatch"
 
 IF signoff["frame_verdicts"] is not a list OR len(signoff["frame_verdicts"]) < 6:
@@ -189,7 +189,7 @@ Required artifacts for Ship recommendation:
 
 ## Step 3.5: Art Director Visual Review
 
-After screenshots are collected and format-validated, run a visual audit across **all user-facing surfaces** before writing the QA report. Format checks cannot detect brand failures, wrong-product assets, or layout defects. The Skiplet-label-in-Jumpyloo incident (2026-05-13) shows why this step is mandatory.
+After screenshots are collected and format-validated, run a visual audit across **all user-facing surfaces** before writing the QA report. Format checks cannot detect brand failures, wrong-product assets, or layout defects. A prior cross-product label contamination incident shows why this step is mandatory.
 
 ### Art Director Persona
 
@@ -205,7 +205,7 @@ The reviewer running this step operates as a seasoned art director — someone w
 
 **What the art director is NOT doing:** rubber-stamping a checklist. They are deciding whether this product looks like it belongs on the App Store next to the competition, or whether it would embarrass the brand if a design journalist screenshot it.
 
-**Reference library for Foculoom kids products (Jumpyloo, Skiplet):**
+**Reference library for kids products:**
 - Toca Boca apps — exemplary tactile delight; every tap feels considered; nothing condescends to children
 - Pok Pok (2022 ADA) — restrained palette, maximum expressiveness within that restraint; no element on screen that doesn't contribute to joy
 - Alto's Odyssey (2018 ADA) — atmospheric cohesion; the sky gradient, the particle behavior, the typography — all from the same visual world
@@ -233,7 +233,7 @@ Any failure blocks the screenshot — file as a separate issue even if pre-exist
 
 ### Surface B — Website
 
-For any release that touches or accompanies a website update (foculoom.com, product landing pages), run `/brand-compliance` on the website surface. Check additionally:
+For any release that touches or accompanies a website update (your product website and landing pages), run `/brand-compliance` on the website surface. Check additionally:
 
 - [ ] Product page shows the correct product name and character (not a sibling product)
 - [ ] OG image / share card reflects the current product (no stale or wrong-product card)
@@ -248,7 +248,7 @@ For any release with a social post, announcement image, or story asset:
 - [ ] Color palette matches the product's brand spec
 - [ ] No draft / placeholder copy ("TBD", "Lorem", "CHANGE ME") in the final export
 - [ ] Image dimensions match the target platform slot (see table below)
-- [ ] `foculoombrand/assets/release/<product>/<version>/manifest.json` updated (run `release-asset-fanout` if not)
+- [ ] `{YOUR_BRAND_ASSET_PATH}/release/<product>/<version>/manifest.json` updated (run your asset pipeline, e.g. `release-asset-fanout` or equivalent, if not)
 
 | Platform | Recommended size | Notes |
 |---|---|---|
