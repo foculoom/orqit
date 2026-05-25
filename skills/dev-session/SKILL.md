@@ -9,12 +9,38 @@ tier: standard
 ## Model
 
 - **Preferred:** `claude-sonnet-4.6`
-- **Premium-exhausted fallback:** `claude-sonnet-4.6` (explicit) — see `/fallback-mode`
+- **Cost-tier fallback:** `/model auto` → `claude-sonnet-4.5` — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
 This skill owns the full session lifecycle referenced by `.github/copilot-instructions.md`. Use `/dev-session` at the start and end of every session.
 
 ## Session Start
+
+### Cold-start vs Savepoint-resume path
+
+**Check first:** Does `session/RESUME.md` exist?
+
+```bash
+ls session/RESUME.md 2>/dev/null && echo "SAVEPOINT EXISTS" || echo "COLD START"
+```
+
+| Path | Condition | Steps |
+|---|---|---|
+| **Savepoint-resume** | `session/RESUME.md` exists | `view session/RESUME.md` → targeted issue lookup (active issue only) → begin work. **Skip** `skill("dev-session")` and `skill("fallback-mode")` — their operative rules are already in system instructions. |
+| **Cold-start** | No RESUME.md | Follow the full Session Start protocol (steps 1–7 below) |
+
+**Skills safe to skip on resume** (operative rules already in system instructions):
+- `dev-session` — session lifecycle; rules in custom instructions
+- `fallback-mode` — model routing; rules in custom instructions
+
+**Skills that must always be invoked when the task requires them** (procedural detail NOT in system instructions):
+- `qa-capture-ios` — exact xcrun/simctl commands
+- `brand-asset-pipeline` — exact export pipeline steps
+- `qa-validate`, `kids-safety`, `risk-review`, `ship-issue` — when task scope requires them
+
+**Context savings:** Skipping `dev-session` + `fallback-mode` skill invocations saves ~523 lines / ~6–8k tokens per session start.
+
+---
 
 1. **Check repository_memories** — review stored facts in the system prompt. Do NOT re-research topics already covered.
 
@@ -28,7 +54,7 @@ This skill owns the full session lifecycle referenced by `.github/copilot-instru
    ```sql
    SELECT s.id, s.summary, s.updated_at
    FROM sessions s
-   WHERE s.repository LIKE '%{your-github-org}%'
+   WHERE s.repository LIKE '%{YOUR_REPOSITORY_PATTERN}%'
    ORDER BY s.updated_at DESC LIMIT 5;
    ```
 
@@ -46,16 +72,16 @@ This skill owns the full session lifecycle referenced by `.github/copilot-instru
      `⚠️ Known mistake patterns (last 7 days): <root cause> [session: <id>]`
    - If no results, skip silently.
 
-5. **dtwin rule surfacing (session-start, cold-start recommended, optional):** If `python3 -m dtwin` is available in your environment, run `python3 -m dtwin list-rules --status pending`; otherwise skip this step silently. BUILDER adds this to the session-start block; whether to gate on cold-start vs every-resume is BUILDER's discretion (document the choice inline if changing defaults). Apply threshold:
+5. **dtwin rule surfacing (session-start, cold-start recommended):** Run `python3 -m dtwin list-rules --status pending`. BUILDER adds this to the session-start block; whether to gate on cold-start vs every-resume is BUILDER's discretion (document the choice inline if changing defaults). Apply threshold:
    - Pending count ≥ 10: surface top-5 titles + rule-ids to founder for approve/reject before proceeding.
    - Pending count 5–9: add a one-line note to the session digest ("N dtwin rules pending — review via `list-rules` when convenient") without blocking.
    - Pending count < 5: no action needed.
 
-   If `python3 -m dtwin` is available, use `python3 -m dtwin get-candidate-rules` for the legacy view if needed. (Note: `list-memories` is **not** a dtwin subcommand — verified 2026-05-18 against CLI surface.)
+   Use `python3 -m dtwin get-candidate-rules` for the legacy view if needed. (Note: `list-memories` is **not** a dtwin subcommand — verified 2026-05-18 against CLI surface.)
 
-   **Advisory drift check (optional):** If `python3 -m dtwin` is available, run `python3 -m dtwin list-rules --status approved | wc -l` and compare roughly to the count of Automatable rows in `automation-registry/SKILL.md`. If the registry is materially longer, remind founder: recent automations may need a paired `python3 -m dtwin add-rule --approve --rule-type workflow "title" "body"`.
+   **Advisory drift check:** Run `python3 -m dtwin list-rules --status approved | wc -l` and compare roughly to the count of Automatable rows in `automation-registry/SKILL.md`. If the registry is materially longer, remind founder: recent automations may need a paired `python3 -m dtwin add-rule --approve --rule-type workflow "title" "body"`.
 
-6. **Usage check (optional, at session start):** If `COPILOT_PLAN_LIMIT` is set and `scripts/check-copilot-usage.sh` exists in your repo, run `scripts/check-copilot-usage.sh --model opus --threshold 70` to check Opus burn before dispatching REVIEWER/PLANNER subagents. Exit 2 = drop to Sonnet; exit 3 = block Opus. See `.github/skills/usage/SKILL.md`.
+6. **Usage check (optional, at session start):** If `COPILOT_PLAN_LIMIT` is set, run `scripts/check-copilot-usage.sh --model opus --threshold 70` to check premium model burn before dispatching REVIEWER/PLANNER subagents. Exit 2 = drop to standard tier (see `/fallback-mode`); exit 3 = block premium models. For extra-premium (gpt-5.5) sessions, also check `--model gpt-5.5 --threshold 70`. See `.github/skills/usage/SKILL.md`.
 
 7. **Do NOT re-run setup** that was completed in prior sessions:
    - Do not re-clone repos
@@ -68,18 +94,16 @@ Follow these steps in order to resume work efficiently.
 
 ### Step 1: Load prior context from digital twin
 
-If a digital-twin/continuation MCP tool is present in your active tool list, call it with the topic or issue number. This returns a context pack from all prior sessions.
+Call `tom-continuationPrompt` with the topic or issue number. This returns a context pack from all prior sessions.
 
-If no topic is provided, call it without a topic to get the most recent work context.
-
-If no such MCP tool is available, skip to Step 2.
+If no topic is provided, call `tom-continuationPrompt` without a topic to get the most recent work context.
 
 ### Step 2: Query session store for recent sessions
 
 ```sql
 SELECT s.id, s.branch, s.summary, s.updated_at
 FROM sessions s
-WHERE s.repository LIKE '%{your-github-org}%'
+WHERE s.repository LIKE '%{YOUR_REPOSITORY_PATTERN}%'
 ORDER BY s.updated_at DESC
 LIMIT 5;
 ```
@@ -89,15 +113,13 @@ LIMIT 5;
 If an issue number is known:
 
 ```bash
-# Replace <tracking-repo> with your actual tracking repo (e.g., owner/repo)
-gh issue view <N> --repo <tracking-repo> --json state,title,body,labels
+gh issue view <N> --repo {YOUR_REPO} --json state,title,body,labels
 ```
 
 If no issue is specified, check for open issues:
 
 ```bash
-# Replace <tracking-repo> with your actual tracking repo (e.g., owner/repo)
-gh issue list --repo <tracking-repo> --state open --limit 10
+gh issue list --repo {YOUR_REPO} --state open --limit 10
 ```
 
 ### Step 4: Determine what's done and what remains
@@ -156,7 +178,7 @@ Context % used (from `/context`) is the **primary** lifecycle signal. Turn count
 | (a) Token budget hard ceiling | > 75% used (> 65% fallback) | Halt — wind-down mandatory |
 | (b) Token budget soft threshold | > 60% used | Compact (per checkpoint table); if no progress after compact → wind-down. Low-progress signal (≤ 1 atomic task remaining or no AC delta since last compact) escalates to wind-down sooner. |
 | (c) Wall-clock warning | Approaching session time limit | Wind-down and checkpoint |
-| (d) Cost cap | `/usage` exits 2 (≥ 70% Opus burn) or exit 3 (over quota) | Drop to fallback model or block Opus |
+| (d) Cost cap | `/usage` exits 2 (≥ 70% premium model burn) or exit 3 (over quota) | Drop one cost tier (see `/fallback-mode`) or block premium model |
 | (e) Repetition | ≥ 3 identical tool calls | Wind-down or fan-out to fresh subagent |
 | (f) Error rate | > 5% of tool calls failing | Wind-down or fan-out |
 
@@ -195,7 +217,7 @@ Keep RESUME.md **≤ 1 500 words / ≤ 8 000 tokens**. Use exactly these four na
 
 > **Scratch state:** RESUME.md is ephemeral session state — do not stage or commit it. Preferred path is `session/RESUME.md` (already gitignored). A root-level `RESUME.md` is also gitignored as a belt-and-braces guard.
 
-1. **Before `/clear`:** complete any required session-end obligations for this repo (e.g., if a digital-twin sync MCP tool is present in your active tool list, call it to sync context). If obligations cannot be completed before the reset, capture them as bullets in **Context-critical facts** so the fresh context knows to run them.
+1. **Before `/clear`:** complete any required session-end obligations for this repo (e.g., `tom-syncTwin` if applicable). If obligations cannot be completed before the reset, capture them as bullets in **Context-critical facts** so the fresh context knows to run them.
 2. Write `session/RESUME.md`: use `edit` or `create` at path `session/RESUME.md`.
 3. Run `/clear` — this resets the context window completely.
 4. At the top of the new session, reload: `view session/RESUME.md`.
@@ -209,7 +231,7 @@ Keep RESUME.md **≤ 1 500 words / ≤ 8 000 tokens**. Use exactly these four na
 | Remaining work > 2 atomic tasks **or** fresh-context benefit outweighs compaction residual (e.g., complex multi-file change, premium model swap) | **Use savepoint** — write RESUME.md → `/clear` → reload |
 | One small remaining task (≤ 1 atomic step) **or** savepoint setup cost > benefit (e.g., mid-turn emergency compaction, context spike from a single large read) | **Use `/compact`** — faster, lower overhead for short remaining work |
 | Approaching Turn 15 hard ceiling with multiple tasks left | **Use savepoint** — do not compress into a lossy summary when significant work remains |
-| Fallback mode active (Opus exhausted) | **Prefer savepoint** — Sonnet degrades more on residual summaries; clean context recovers more quality |
+| Fallback mode active (cost-tier step-down) | **Prefer savepoint** — standard-tier models degrade more on residual summaries; clean context recovers more quality |
 
 > **Rule of thumb:** if you would need to compact more than once to finish, use savepoint instead.
 
@@ -241,7 +263,7 @@ When wind-down triggers, **stop accepting new work** and begin the wind-down seq
 3. **Store memories** — call `store_memory` for every significant discovery this session.
 4. **Update plan.md / issue state** — capture remaining work and blockers in the GitHub issue.
 5. **Return to default branch** — follow the § Session End checklist below.
-6. **Checkpoint** — if a digital-twin sync MCP tool is present in your active tool list, call it to persist context for the next session.
+6. **Checkpoint** — call `tom-syncTwin` to persist context for the next session.
 
 **CONDUCTOR ownership:** when CONDUCTOR is driving, it owns this sequence. CONDUCTOR must surface `⚠️ WIND-DOWN: context-health checkpoint triggered — beginning end-of-session sequence` (appending the reason, e.g., `turn 10 >75%` or `turn 15 hard ceiling`) before wind-down starts, so the founder can redirect if needed. Do NOT start a new issue during wind-down.
 
@@ -249,31 +271,31 @@ When wind-down triggers, **stop accepting new work** and begin the wind-down seq
 
 Use the Model Routing Matrix below as the single source of truth for picking a model per skill or agent. It supersedes the prior bullet list.
 
-<!-- Last verified against Copilot CLI v1.0.51 on 2026-05-20 -->
-**Last verified:** Copilot CLI **v1.0.51** on 2026-05-20 (issue #1185; pin bump only; no routing changes — all 14 task-tool model IDs unchanged from v1.0.48; Auto pool unchanged at 6 models; Raptor mini appeared in Auto-pool YAML with cli:false — not in task enum, no Matrix action; Claude Opus 4.6 (fast mode) (preview) appears in supported-clients docs as cli:true but is not exposed as a pin-able task enum ID — no Matrix row until stable ID is exposed; GPT-5.5 multiplier confirmed at 7.5× via model-multipliers.yml — re-verify post-June-1 as docs state multipliers are subject to change; gpt-5.2/gpt-5.2-codex/gpt-4.1 deprecated June 1 but were never routed). Refresh via the `model-audit` skill (#464) every 7 days (or after any `copilot update` bump, or on any GitHub Copilot changelog entry mentioning model/auto/deprecat/pricing) — see #928 for rationale. Matrix updated with `5-whys` row; no new CLI model-enum verification claimed in this edit.
+<!-- Last verified against Copilot CLI v1.0.54 on 2026-05-24 -->
+**Last verified:** Copilot CLI **v1.0.54** on 2026-05-24 (issue #1382; pin bump only; CONDUCTOR tier moved from extra-premium to standard per PR #1383 (2026-05-24); claude-opus-4.6 and claude-opus-4.5 now exposed as pin-able task enum IDs (were preview/not exposed at v1.0.51 — see #1231); gpt-5.2/gpt-5.2-codex/gpt-4.1 still in enum pre-June-1 deprecation (confirm removal post-June-1); GPT-5.5 multiplier confirmed 7.5× — re-verify post-June-1; all other routing unchanged). Refresh via the `model-audit` skill (#464) every 7 days (or after any `copilot update` bump, or on any GitHub Copilot changelog entry mentioning model/auto/deprecat/pricing) — see #928 for rationale. Matrix updated with `5-whys` row; no new CLI model-enum verification claimed in this edit.
 
 #### Tier Taxonomy (canonical)
 
-Every agent profile and skill SKILL.md declares its tier as follows: skill `SKILL.md` files use a `tier:` YAML front-matter field; agent `.agent.md` files use an HTML-comment marker `<!-- tier: <value> -->` immediately after the front-matter close (the Copilot CLI custom-agent loader rejects unknown front-matter fields, so `tier:` cannot live in `.agent.md` front-matter; see your project's issue tracker for the follow-up postmortem). The Matrix's "Preferred Model" column is the authoritative routing; the tier label is a declarative summary for cost-guard gating, allowlisting, and audit. Two-pass skills (`reviewer-qa-gate`, `qa-validate`, `brand-compliance`) declare `tier: two-pass` and use multiple models per the Matrix row.
+Every agent profile and skill SKILL.md declares its tier as follows: skill `SKILL.md` files use a `tier:` YAML front-matter field; agent `.agent.md` files use an HTML-comment marker `<!-- tier: <value> -->` immediately after the front-matter close (the Copilot CLI custom-agent loader rejects unknown front-matter fields, so `tier:` cannot live in `.agent.md` front-matter; a prior loader regression established this split declaration form). The Matrix's "Preferred Model" column is the authoritative routing; the tier label is a declarative summary for cost-guard gating, allowlisting, and audit. Two-pass skills (`reviewer-qa-gate`, `qa-validate`, `brand-compliance`) declare `tier: two-pass` and use multiple models per the Matrix row.
 
 | Tier | Label | Default model | Multiplier | Used by |
 |---|---|---|---|---|
 | 1 | **basic** | `claude-haiku-4.5` | 0.33× | usage, model-audit, automation-registry, llc-ops, qa-capture-ios, 5-whys, release-asset-fanout, a11y-godot (OUTLINE), status (Quick mode default) |
-| 2 | **standard** | `claude-sonnet-4.6` | 1× | BUILDER, dev-session, ship-issue, brand-asset-pipeline, release-post, fallback-mode, kids-safety, status (Full mode) |
+| 2 | **standard** | `claude-sonnet-4.6` | 1× | BUILDER, CONDUCTOR, dev-session, ship-issue, brand-asset-pipeline, release-post, fallback-mode, kids-safety, status (Full mode) |
 | 3 | **premium** | `claude-opus-4.7` | 15× | PLANNER, REVIEWER, new-feature, risk-review |
-| 4 | **extra-premium** | `gpt-5.5` | 7.5× | CONDUCTOR, market-scan |
+| 4 | **extra-premium** | `gpt-5.5` | 7.5× | market-scan |
 | — | **two-pass** | per Matrix row | mixed | reviewer-qa-gate (Sonnet+Opus), qa-validate (Sonnet+Opus), brand-compliance (Sonnet+Opus) |
 
-> **Cost-guard mapping** (if `scripts/check-copilot-usage.sh` is available: `scripts/check-copilot-usage.sh --tier <label>`): basic → `*haiku*`, standard → `*sonnet*`, premium → `*opus*`, extra-premium → `gpt-5.5`. Backward-compatible with `--model <glob>`.
+> **Cost-guard mapping** (`scripts/check-copilot-usage.sh --tier <label>`): basic → `*haiku*`, standard → `*sonnet*`, premium → `*opus*`, extra-premium → `gpt-5.5`. Backward-compatible with `--model <glob>`.
 
 #### Model Routing Matrix
 
-| Skill / Agent | Preferred Model | Reason | Premium-Exhausted Fallback |
+| Skill / Agent | Preferred Model | Reason | Cost-Tier Fallback |
 |---|---|---|---|
-| **agent: planner** | `claude-opus-4.7` | Strategy, spec writing, content judgment | `claude-opus-4.6` → `claude-opus-4.5` → `claude-sonnet-4.6` + `--effort xhigh` + mandatory rubber-duck |
-| **agent: builder** | `claude-sonnet-4.6` | Implementation and build/test at standard tier | `/model auto` → `claude-sonnet-4.5`; `gpt-5.3-codex` for pure-code edits |
-| **agent: reviewer** | `claude-opus-4.7` | Visual/business judgment, deep audits | `claude-opus-4.6` → `claude-opus-4.5` → `claude-sonnet-4.6` + `--effort xhigh` |
-| **agent: conductor** | `gpt-5.5` | Orchestration, gate reasoning, subagent dispatch | `claude-opus-4.6` → `claude-opus-4.5` → `claude-sonnet-4.6` + `--effort xhigh` |
+| **agent: planner** | `claude-opus-4.7` | Strategy, spec writing, content judgment | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + mandatory rubber-duck |
+| **agent: builder** | `claude-sonnet-4.6` | Implementation and build/test at standard tier | standard → basic: `/model claude-haiku-4.5` (no effort flag); or `/model auto` → `claude-sonnet-4.5` |
+| **agent: reviewer** | `claude-opus-4.7` | Visual/business judgment, deep audits | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck before every quality verdict |
+| **agent: conductor** | `claude-sonnet-4.6` | Orchestration, gate reasoning, subagent dispatch — deliberately pinned to standard tier by founder 2026-05-24 (prev: gpt-5.5) | standard → basic: `claude-haiku-4.5` (no effort flag); REVIEWER/PLANNER subagents: premium → standard per fallback-mode SKILL |
 | `a11y-godot` | `claude-haiku-4.5` (while OUTLINE per #947); upgrade to `claude-sonnet-4.6` post-spike | Placeholder checklist; minimal judgment required pending SPIKE-A11Y closure | `claude-haiku-4.5` (while OUTLINE); `/model auto` → `claude-sonnet-4.5` post-#947 |
 | `automation-registry` | `claude-haiku-4.5` | Reference lookup, mechanical | `claude-haiku-4.5` (already cheap) |
 | `brand-asset-pipeline` | `claude-sonnet-4.6` | Visual judgment + tool orchestration | `/model auto` → `claude-sonnet-4.5` |
@@ -282,12 +304,12 @@ Every agent profile and skill SKILL.md declares its tier as follows: skill `SKIL
 | `fallback-mode` | `claude-sonnet-4.6` | Self-referential: the skill IS the fallback | n/a (already at fallback tier) |
 | `kids-safety` | `claude-haiku-4.5` (trivial features only — no data/AI/IAP/UGC); `claude-sonnet-4.6 --effort xhigh` default for non-trivial features | COPPA/KOSA per-feature checklist; $50k/violation risk warrants Sonnet default when feature touches any trigger surface | `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
 | `llc-ops` | `claude-haiku-4.5` | Checklist / date lookup | `claude-haiku-4.5` (already cheap) |
-| `market-scan` | `gpt-5.5` | Research + competitive analysis | `claude-opus-4.6` → `claude-opus-4.5` → `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
+| `market-scan` | `gpt-5.5` | Research + competitive analysis | extra-premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
 | `model-audit` | `claude-haiku-4.5` | Version diff + template generation | `claude-haiku-4.5` (already cheap) |
-| `new-feature` | `claude-opus-4.7` | PLANNER intake decisioning | `claude-opus-4.6` → `claude-opus-4.5` → `claude-sonnet-4.6` + `--effort xhigh` |
+| `new-feature` | `claude-opus-4.7` | PLANNER intake decisioning | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` |
 | `qa-capture-ios` | `claude-haiku-4.5` | Mechanical `xcrun` commands | `claude-haiku-4.5` (already cheap) |
 | `qa-validate` | `claude-sonnet-4.6` (CLI/platform steps); `claude-opus-4.7` for Sprite Art Gate (§2.5), Walk-Cycle Receipt Subgate (§2.5.1), Art Director Visual Review (§3.5) | Platform detection + test runs; ADA-class visual judgment for art gates | `/model auto` → `claude-sonnet-4.5`; `claude-sonnet-4.6 --effort xhigh` + rubber-duck for Opus-escalation steps |
-| `risk-review` | `claude-opus-4.7` | Sensitive judgment (health/legal/kids) | `claude-opus-4.6` → `claude-opus-4.5` → `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
+| `risk-review` | `claude-opus-4.7` | Sensitive judgment (health/legal/kids) | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
 | `5-whys` | `claude-haiku-4.5` | Mechanical root-cause template; escalate when root cause is disputed | `claude-sonnet-4.6` for severity gates (i)-(iii) or disputed root cause |
 | `release-asset-fanout` | `claude-haiku-4.5` | Pure script runner (Pillow resize + manifest JSON write); zero judgment | `claude-haiku-4.5` (already cheap) |
 | `release-post` | `claude-sonnet-4.6` | Content gen + tool orchestration | `/model auto` |
@@ -300,7 +322,7 @@ Every agent profile and skill SKILL.md declares its tier as follows: skill `SKIL
 
 #### MCP Tool Inventory (audio/image/TTS)
 
-Registered in `~/.copilot/mcp-config.json`. All output paths are under `~/{your-local-workspace}/{your-mcp-server}/assets/`.
+Registered in `~/.copilot/mcp-config.json`. All output paths are under `~/{YOUR_ORG}/infra/{YOUR_BRAND_ASSET_PATH}`.
 
 | MCP Server | Tool(s) | Use for | Output path |
 |---|---|---|---|
@@ -309,14 +331,14 @@ Registered in `~/.copilot/mcp-config.json`. All output paths are under `~/{your-
 | `suno` | `suno-*` | Music, jingles, game audio suites | `assets/audio/generated/` |
 | `elevenlabs` | `elevenlabs-text-to-speech`, `elevenlabs-list-presets` | TTS voice assets (onboarding, readback, narration) | `assets/audio/generated/elevenlabs/{preset}/` |
 
-<!-- Replace with your studio's TTS/voice preset mapping if applicable -->
-**ElevenLabs presets → products:** Update this mapping to reflect your studio's voice presets and product assignments. Soft monthly cap varies by plan; every generated file must pass REVIEWER before entering a product repo. Voice cloning requires `/risk-review`.
+**ElevenLabs presets → products:** map your preset names to your own product lines in your MCP README or ops docs. Soft monthly cap $5/mo; every generated file must pass REVIEWER before entering a product repo. Voice cloning is out of scope — requires `/risk-review`. See your ElevenLabs MCP README for the full registry.
 
 **How to use:**
 - Switch with `/model <id>` or pass `model: "<id>"` when invoking a sub-agent via the `task` tool.
-- "Premium-Exhausted Fallback" applies when premium quota is exhausted; full recipe lives in the `fallback-mode` skill (#463).
+- "Cost-Tier Fallback" applies when spend on the current model tier needs to be reduced; full recipe lives in the `fallback-mode` skill (#463).
 - Per-skill `## Model` blocks (#462) repeat the same values inline; on conflict, this matrix wins.
 - **Audit note (2026-05-20 / #1231):** All explicit task-tool model IDs referenced in the matrix are still present in the current `task` tool roster (v1.0.51 enum: 14 IDs — unchanged from v1.0.48; of which 3 — `gpt-5.2`, `gpt-5.2-codex`, `gpt-4.1` — are deprecated effective June 1, 2026; post-June-1 audit will confirm their removal and reduce the count to 11). Additional exposed IDs — `gpt-5.4`, `gpt-5.4-mini`, `gpt-5-mini` (plus the 3 deprecated above) — remain intentionally unlisted here because no skill currently recommends them as the preferred or fallback route. Auto pool unchanged at 6 models. Raptor mini appeared in Auto-pool YAML with cli:false — no task enum entry, no Matrix action needed. Claude Opus 4.6 (fast mode) (preview) appears in `model-supported-clients.yml` as cli:true but is not exposed as a pin-able task enum ID; no Matrix row will be added until a stable ID is exposed in the task tool enum. GPT-5.5 multiplier confirmed at 7.5× via `model-multipliers.yml` (fetched 2026-05-18); must be re-verified post-June-1 because GitHub docs state multipliers/costs are subject to change.
+- **Audit note (2026-05-24 / #1382):** `claude-opus-4.6` and `claude-opus-4.5` are now pin-able task enum IDs as of CLI v1.0.54 (no longer preview/unexposed). Both are intentionally unlisted in this Matrix — no skill currently recommends them as a preferred or fallback route; all Opus-tier routing uses `claude-opus-4.7`.
 - **Auto model selection (GA 2026-04-17; server-side routing since v1.0.43):** `/model auto` is a viable alternative for most Standard-tier and Mechanical-tier skills. It routes dynamically among models with ≤1× multipliers, chosen in real time by GitHub server-side logic — pool composition can change without a CLI version bump. As of 2026-05-06 (`github/docs` commit [`98afef20`](https://github.com/github/docs/blob/main/data/tables/copilot/auto-model-selection.yml)) the CLI Auto pool contains 6 models: Claude Sonnet 4.6, Claude Haiku 4.5, GPT-5.4, GPT-5.3-Codex, **GPT-5.4 mini**, **GPT-5 mini**. Authoritative live list: [`auto-model-selection.yml`](https://github.com/github/docs/blob/main/data/tables/copilot/auto-model-selection.yml). Paid plans receive a 10% multiplier discount on Auto responses. Auto **cannot reach Opus 4.7** — all Opus-tier skills must stay on explicit model IDs. Keep explicit `claude-haiku-4.5` for any task where zero-premium spend is required.
 - **Guardrail:** do not pair sticky `--effort xhigh` with `/model auto` (notably inside `/fallback-mode`). Auto may route to `claude-haiku-4.5`, which rejects reasoning effort and can fail the request.
 
@@ -339,10 +361,10 @@ Skip if the session was purely research with no new actionable facts.
 ### 2. Sync digital twin
 
 ```
-If a digital-twin sync MCP tool is present in your active tool list, call it with mode: "incremental"
+Call tom-syncTwin with mode: "incremental"
 ```
 
-This ensures the next session can retrieve context from this one via a digital-twin continuation MCP tool, if available.
+This ensures the next session can retrieve context from this one via `tom-continuationPrompt`.
 
 ### 3. Return to default branch
 
@@ -353,8 +375,8 @@ with an explicit blocker:
 - detached HEAD state is non-compliant
 - a dirty non-default branch is non-compliant because session-end cannot switch safely
 - if the default branch is checked out in another linked worktree, stop and surface it
-- in `{your-main-repo}`, session-end is also non-compliant when the default branch is ahead of, behind, or diverged from upstream
-- in `{your-main-repo}`, local-only spec/workflow commits that reference already-closed issues must land through a reviewable path or remain attached to an explicit open landing step before issue closeout
+- in your tracking repo, session-end is also non-compliant when the default branch is ahead of, behind, or diverged from upstream
+- in your tracking repo, local-only spec/workflow commits that reference already-closed issues must land through a reviewable path or remain attached to an explicit open landing step before issue closeout
 
 ### 4. Clean merged local branches
 
@@ -377,8 +399,7 @@ scripts/cleanup-redundant-local-branches.sh --apply feature/issue-N-short-descri
 If working on a GitHub Issue, add a progress comment:
 
 ```bash
-# Replace <tracking-repo> with your actual tracking repo (e.g., owner/repo)
-gh issue comment <N> --repo <tracking-repo> --body "Progress: <what was done, what remains>"
+gh issue comment <N> --repo {YOUR_REPO} --body "Progress: <what was done, what remains>"
 ```
 
 ### 6. Note incomplete work
@@ -387,7 +408,7 @@ If work is unfinished, ensure:
 - The session summary captures what remains
 - Any blocking issues are documented
 - The GitHub Issue reflects current state
-- Any `{your-main-repo}` issue with local-only spec/workflow commits is either still attached to an explicit open landing step or not closed yet
+- Any tracking-repo issue with local-only spec/workflow commits is either still attached to an explicit open landing step or not closed yet
 - Any hook warning about a dirty worktree is addressed by either committing the intended changes, handing the work off to BUILDER or `/delegate`, or explicitly calling out why the files remain uncommitted
 
 ### 6b. Run severity-gate completion check
@@ -411,11 +432,11 @@ For each untracked file shown by `git status --short`:
 Treat `.dtwin/` as protected AI-infra state, not generic scratch/residue.
 
 Before any cleanup/disposition claim about `.dtwin/`, verify from the repo root:
-1. **dtwin CLI behavior** (if `python3 -m dtwin` is installed — both forms are valid):  
+1. **dtwin CLI behavior** (both forms are valid):  
    `python3 -m dtwin list-rules --status pending`  
    `python3 -m dtwin --repo-root "$PWD" list-rules --status pending`
 2. **Local `.dtwin/dtwin.db` state** — confirm schema/tables and row counts are readable.
-3. **Canonical dtwin DB comparison** — check `{your-dtwin-path}` (**machine-local path — replace with your environment's path**) and compare state.
+3. **Canonical dtwin DB comparison** — check your canonical shared dtwin database path (for example, `{YOUR_DTWIN_DB_PATH}`) and compare state.
 4. **Git visibility/ignore state** — run `git status --untracked-files=all .dtwin` and `git check-ignore` for `.dtwin` artifacts.
 
 Do not delete `.dtwin/`, `dtwin.db`, `dtwin.db-shm`, or `dtwin.db-wal` without explicit founder approval and a replacement ignore/state policy.

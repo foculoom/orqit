@@ -9,7 +9,7 @@ tier: standard
 ## Model
 
 - **Preferred:** `claude-sonnet-4.6`
-- **Premium-exhausted fallback:** `/model auto` → `claude-sonnet-4.5`; `gpt-5.3-codex` for pure-code edits — see `/fallback-mode`
+- **Cost-tier fallback:** `/model auto` → `claude-sonnet-4.5`; `gpt-5.3-codex` for pure-code edits — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
 Implement exactly one GitHub Issue and prepare a reviewable PR.
@@ -36,7 +36,7 @@ Collision enforcement (backstop):
 - After `git worktree prune`, if `git worktree list` reveals a sibling worktree on `feature/issue-<other-issue>-...` in this repo (excluding this BUILDER's own `WORKTREE_PATH` / current issue branch), BUILDER is FORBIDDEN from using `git checkout -b` in the current checkout.
 - HARD STOP and either create/use the correct linked worktree with `git worktree add` or route back to CONDUCTOR.
 
-Track-C-style references: see your project's issue tracker for worktree collision precedents.
+Track-C-style references: https://github.com/{YOUR_REPO}/issues/889 and https://github.com/{YOUR_REPO}/issues/890
 
 ## New-App First-Ship Checklist
 
@@ -64,14 +64,14 @@ For encryption usage assessment: grep `Sources/` and `*Core/` for `import Crypto
 ## Step 1: Load the issue
 
 ```bash
-gh issue view <N> --repo {your-github-org}/{your-main-repo} --json title,body,labels
+gh issue view <N> --repo {YOUR_REPO} --json title,body,labels
 ```
 
 Verify:
 - Acceptance criteria exist and are testable
 - Scope is clear (if not, stop and ask for clarification)
 - Target repo is identified
-- The handoff points at a real `{your-github-org}/{your-tracking-repo}#N`; if it still says
+- The handoff points at a real `{YOUR_REPO}#N`; if it still says
   `GITHUB_ISSUE: TBD`, stop and route back to PLANNER
 
 ## Step 1.5: Repo-state preflight
@@ -95,23 +95,22 @@ Stop before implementation if:
 - the branch flow does not start from the current default branch
 - after `git worktree prune`, a different-issue `feature/issue-...` branch exists in a sibling worktree and this BUILDER does not have a `WORKTREE_PATH` for this issue (HARD STOP; route back to CONDUCTOR)
 
-If branch cleanup is in scope, and `scripts/cleanup-redundant-local-branches.sh` exists in your repo, run the local helper in dry-run mode first:
+If branch cleanup is in scope, run the local helper in dry-run mode first:
 
 ```bash
 scripts/cleanup-redundant-local-branches.sh branch-name [branch-name ...]
 ```
 
-Otherwise, manually delete the merged branch with:
-
-```bash
-git branch -d branch-name && git push origin --delete branch-name
-```
-
 ## Step 1.75: Cross-Repo Target Detection
 
-If the tracking issue lives in your main repo but implementation belongs in a different repo, check out the target repo before creating the feature branch.
+If the tracking issue lives in `{YOUR_REPO}` but implementation belongs in a different repo:
 
-**Add your studio's target repos here** (e.g., your iOS app repo, brand assets repo, website repo, LLC infrastructure repo). Use the full `owner/repo` reference for each.
+**Target repos:**
+- `{YOUR_APP_REPO}` — iOS app
+- `{YOUR_IOS_COMPANION_REPO}` — iOS companion
+- `{YOUR_BRAND_ASSET_REPO}` — brand assets
+- `{YOUR_WEBSITE_REPO}` — website
+- `{YOUR_INFRA_REPO}` — LLC infrastructure
 
 **Check out the target repo:**
 
@@ -139,13 +138,13 @@ Branch naming: `feature/issue-N-short-description`
 
 If the issue involves brand assets (fonts, icons, images, logos, audio):
 
-1. Check `{your-brand-assets-repo}/assets/` for the required assets
+1. Check `{YOUR_BRAND_ASSET_PATH}` for the required assets
 2. Verify each asset exists in the canonical source
-3. If an asset is referenced in brand-kit.md but missing from `{your-brand-assets-repo}`:
+3. If an asset is referenced in brand-kit.md but missing from {YOUR_BRAND_ASSET_REPO}:
    - **STOP implementation**
-   - Report: "Asset X is defined in brand-kit.md but not present in `{your-brand-assets-repo}`"
+   - Report: "Asset X is defined in brand-kit.md but not present in {YOUR_BRAND_ASSET_REPO}"
    - Route to brand-asset-pipeline for onboarding
-4. Only source brand assets from `{your-brand-assets-repo}` — never from external URLs
+4. Only source brand assets from {YOUR_BRAND_ASSET_REPO} — never from external URLs
 
 ## Step 3: Implement changes
 
@@ -192,7 +191,7 @@ Only proceed to Step 4 when all tests and lints pass.
 git add -A
 git commit -m "feat(scope): description (#N)
 
-Closes {your-github-org}/{your-tracking-repo}#N
+Closes {YOUR_REPO}#N
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
@@ -215,17 +214,17 @@ gh pr create \
 ## Risk Notes
 <any risks>
 
-Closes {your-github-org}/{your-tracking-repo}#N"
+Closes {YOUR_REPO}#N"
 ```
 
-For cross-repo PRs (in a companion repo), use the full reference:
-`Closes {your-github-org}/{your-tracking-repo}#N`
+For cross-repo PRs (e.g., in {YOUR_PRODUCT_SLUG}, {YOUR_BRAND_ASSET_REPO}), use the full reference:
+`Closes {YOUR_REPO}#N`
 
 ## Step 5.25: App Reach gate
 
 **Applies to every iOS app submission (new app and every subsequent version).**
 
-This gate is required by the App Reach policy (`docs/policy/app-reach.md`). Verify the policy document exists in your repo and replace the reference with your own platform-reach requirements.
+This gate is required by the App Reach policy (`docs/policy/app-reach.md`, {YOUR_REPO}#716). Founder directive: 2026-04-26.
 
 Before uploading to TestFlight, verify all three checks. Each check must either confirm the policy default is met **or** cite an exception in the spec's `Platform & Technical Notes` section:
 
@@ -237,11 +236,11 @@ Failing any check **blocks the upload**. Passing requires either the default sta
 
 See `docs/policy/app-reach.md` for the full policy, citation format, and worked examples.
 
-## Step 5.5: iOS Release Gate
+## Step 5.5: iOS release gate — TestFlight first
 
-**Applies to every iOS release (1.0 and every subsequent version).**
+**Applies to every iOS release of any {YOUR_ORG_NAME} app (1.0 and every subsequent version).**
 
-Establish your studio's TestFlight soak policy before promoting any iOS build to App Store Review. Adapt this gate to match your platform release policy.
+This gate is required by the TestFlight-first release policy (spec `specs/2026-04-testflight-first-release-policy-v1-spec.md`, {YOUR_REPO}#700). Founder directive: 2026-04-26.
 
 ### §4.1 Mandatory gate
 
@@ -252,7 +251,7 @@ For every iOS release:
 3. Build soaks for at least the minimum window (§4.2 table below).
 4. Smoke-test checklist (§4.3) is run against the TestFlight build on a **real device**.
 5. **`reviewer-qa-gate` skill PASS** (mandatory; see `.github/skills/reviewer-qa-gate/SKILL.md`). Catches HUD/visual/accessibility regressions that smoke-test misses.
-6. Only after smoke-test passes AND `reviewer-qa-gate` returns PASS may the build be promoted to App Store Review via your app's submit script.
+6. Only after smoke-test passes AND `reviewer-qa-gate` returns PASS may the build be promoted to App Store Review via the per-app submit script (`{YOUR_PRODUCT_SLUG}_submit.py`, `veilsort_submit.py`, etc.).
 
 ### §4.2 Minimum soak window
 
@@ -296,6 +295,39 @@ For genuine emergencies (e.g., live-app crash on launch affecting all users), th
 
 No agent may waive the soak window without explicit founder approval.
 
+### Godot release variant (iOS, macOS, web)
+
+**Applies to every Godot-engine release of any {YOUR_ORG_NAME} product on iOS, macOS, or web.**
+
+This gate is required by the Godot soak policy (`specs/2026-05-godot-testflight-soak-policy-v1-spec.md`, {YOUR_REPO}#943). The SwiftUI/SpriteKit gate above continues to govern non-Godot iOS releases unchanged.
+
+**Soak windows** — follow `specs/2026-05-godot-testflight-soak-policy-v1-spec.md §4.2`. Windows apply uniformly across all three platforms.
+
+**{YOUR_PRODUCT} pre-upload automated gate (iOS)**
+
+Before exporting and uploading any {YOUR_PRODUCT} iOS build to TestFlight, run from the {YOUR_PRODUCT_SLUG} repo root:
+
+```bash
+cd /path/to/{YOUR_PRODUCT_SLUG} && godot --path godot/ -- --combo-qa
+```
+
+The command must **exit 0** (all 3 tier screenshots captured: TIER_2, TIER_3, TIER_4). A non-zero exit **blocks the upload**. This verifies the combo state machine is functional end-to-end in the exact source being shipped. Typical runtime: ~2 min on macOS with a display (requires GUI — do not pass `--headless`).
+
+**Distribution mechanism per platform:**
+
+- **iOS:** upload to App Store Connect; enable internal TestFlight; record soak-start timestamp in PR body.
+- **macOS (MAS):** upload to App Store Connect; enable internal TestFlight; record soak-start timestamp in PR body.
+- **macOS (DMG):** provide a signed, notarized DMG to the founder-internal channel; record soak-start timestamp in PR body.
+- **web:** deploy to the direct-host preview URL; share with founder for internal soak; record soak-start timestamp in PR body.
+
+**Smoke-test checklists** — run the applicable checklist before promotion:
+
+- **iOS:** `specs/2026-05-godot-testflight-soak-policy-v1-spec.md §4.3.A`
+- **macOS (MAS or DMG):** `specs/2026-05-godot-testflight-soak-policy-v1-spec.md §4.3.B`
+- **web:** `specs/2026-05-godot-testflight-soak-policy-v1-spec.md §4.3.C`
+
+Record pass/fail for every checklist item in the tracking issue. Any failed item rejects promotion; fix → new build → soak window restarts. Hotfix override follows the same clause as §4.5 above (founder explicit approval required).
+
 ---
 
 ## Step 6: Knowledge Checkpoint
@@ -325,8 +357,8 @@ Output recommendation:
 - Never start implementation from `GITHUB_ISSUE: TBD`
 - Never ignore a dirty checkout or lingering linked worktrees when the issue
   expects clean branch creation or branch cleanup
-- Always include `Closes {your-github-org}/{your-tracking-repo}#N` in PR body
+- Always include `Closes {YOUR_REPO}#N` in PR body
 - Always include the Co-authored-by trailer for Copilot commits
-- Always use `Closes {your-github-org}/{your-tracking-repo}#N` (full cross-repo reference) — shorthand `#N` won't auto-close from other repos
-- When implementing in a different repo, create the PR in that repo, not in the tracking repo
+- Always use `Closes {YOUR_REPO}#N` (full cross-repo reference) — shorthand `#N` won't auto-close from other repos
+- When implementing in a different repo, create the PR in that repo, not in {YOUR_REPO}
 - For cross-repo work, cd to the target repo before creating the feature branch

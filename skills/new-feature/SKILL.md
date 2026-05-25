@@ -9,7 +9,7 @@ tier: premium
 ## Model
 
 - **Preferred:** `claude-opus-4.7`
-- **Premium-exhausted fallback:** `claude-sonnet-4.6` + `--effort xhigh` — see `/fallback-mode`
+- **Cost-tier fallback:** `claude-sonnet-4.6` + `--effort xhigh` — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
 Process a new feature idea through the standard decision framework.
@@ -38,7 +38,7 @@ Use the exact schema from `agents/handoff-template.md`:
 PROJECT:
 REPO:
 PLATFORM:
-GITHUB_ISSUE: {your-github-org}/{your-tracking-repo}#___
+GITHUB_ISSUE: {YOUR_REPO}#___
 GOAL:
 SMALLEST_SHIPPABLE_SCOPE:
 OUT_OF_SCOPE:
@@ -87,6 +87,9 @@ Based on the idea's characteristics:
 
 Do NOT write specs, code, or create GitHub Issues — those are PLANNER and BUILDER responsibilities.
 
-## Studio brand alignment check
+## Mission alignment check
 
-Verify the feature aligns with your studio's mission: `{your-studio-mission}`.
+Verify the feature aligns with your mission and product principles.
+- For kids products: keep the experience safe, clear, and age-appropriate
+- For adult products: prefer calm, structured, low-friction workflows
+- Brand palette and tone should come from your current brand spec
