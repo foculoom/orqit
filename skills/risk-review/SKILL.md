@@ -9,7 +9,7 @@ tier: premium
 ## Model
 
 - **Preferred:** `claude-opus-4.7`
-- **Premium-exhausted fallback:** `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck — see `/fallback-mode`
+- **Cost-tier fallback:** `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
 Perform a structured risk assessment before any spec is written for a sensitive idea.

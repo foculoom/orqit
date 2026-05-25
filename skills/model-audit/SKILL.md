@@ -9,7 +9,7 @@ tier: basic
 ## Model
 
 - **Preferred:** `claude-haiku-4.5`
-- **Premium-exhausted fallback:** `claude-haiku-4.5` — see `/fallback-mode`
+- **Cost-tier fallback:** `claude-haiku-4.5` — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
 ## Cadence

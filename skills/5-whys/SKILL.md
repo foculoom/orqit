@@ -9,7 +9,7 @@ tier: basic
 ## Model
 
 - **Preferred:** `claude-haiku-4.5`
-- **Premium-exhausted fallback:** `claude-sonnet-4.6` for severity gates (i)-(iii) or disputed root cause
+- **Cost-tier fallback:** `claude-sonnet-4.6` for severity gates (i)-(iii) or disputed root cause
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
 `.github/copilot-instructions.md` §5-whys mistake protocol is authoritative for trigger logic and severity gates.
