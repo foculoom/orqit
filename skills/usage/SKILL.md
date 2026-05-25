@@ -9,8 +9,8 @@ tier: basic
 ## Model
 
 - **Preferred:** `claude-haiku-4.5`
-- **Premium-exhausted fallback:** `claude-haiku-4.5` (already cheap — no fallback needed)
-- **Source of truth:** Model Routing Matrix in your plugin's `dev-session/SKILL.md`
+- **Cost-tier fallback:** `claude-haiku-4.5` (already cheap — no fallback needed)
+- **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
 Mechanical skill — occasional API call only. No judgment required; haiku is appropriate.
 
@@ -18,13 +18,9 @@ Mechanical skill — occasional API call only. No judgment required; haiku is ap
 
 Run at session start when CONDUCTOR cost-guard triggers, or manually via `/usage` to check current Opus burn before spawning REVIEWER/PLANNER subagents.
 
-If `scripts/check-copilot-usage.sh` exists in your repo, run:
-
 ```bash
 scripts/check-copilot-usage.sh --model opus --threshold 70
 ```
-
-Otherwise, check usage manually via the GitHub Copilot web UI at https://github.com/settings/copilot.
 
 ## Prerequisites
 
@@ -44,22 +40,20 @@ Otherwise, check usage manually via the GitHub Copilot web UI at https://github.
 
 ## Org-managed setup
 
-Your Copilot plan may be org-managed. The **user endpoint returns 404** for org-managed plans — this is expected GitHub API behavior.
+If your Copilot plan is org-managed, the **user endpoint returns 404** for user-scope requests — this is expected GitHub API behavior.
 
-To get real usage data for `{your-github-org}` org:
+To get real usage data for your org:
 
 1. Set `COPILOT_USAGE_SCOPE=org`
-2. Set `COPILOT_USAGE_ORG={your-github-org}`
+2. Set `COPILOT_USAGE_ORG={YOUR_ORG}`
 3. Use a PAT with **org Administration: read** permission (user-scope PAT with Plan: read is insufficient for org endpoints)
 
 ```bash
 export COPILOT_USAGE_SCOPE=org
-export COPILOT_USAGE_ORG={your-github-org}
+export COPILOT_USAGE_ORG={YOUR_ORG}
 export COPILOT_PLAN_LIMIT=300
 export COPILOT_PLAN_TIER=Business
-# If scripts/check-copilot-usage.sh exists in your repo:
 scripts/check-copilot-usage.sh --model opus --threshold 70
-# Otherwise, check usage manually via the GitHub Copilot web UI at https://github.com/settings/copilot
 ```
 
 If you see a 403/404, the script prints a detailed diagnostic to stderr with the required token permissions.
@@ -135,7 +129,7 @@ _(stderr: `Warning: COPILOT_PLAN_LIMIT is not set. Cannot compute burn percentag
 
 ## CONDUCTOR integration
 
-CONDUCTOR invokes `scripts/check-copilot-usage.sh --model opus --threshold 70` (if available in your repo) and gates on exit code:
+CONDUCTOR invokes `scripts/check-copilot-usage.sh --model opus --threshold 70` and gates on exit code:
 
 - **Exit 0** — ok/unknown: proceed with default model routing
 - **Exit 2** — warning (≥70% Opus burn): drop REVIEWER to `claude-sonnet-4.6 --effort xhigh`
@@ -145,7 +139,7 @@ See `.github/agents/conductor.agent.md` § Cost guard for the full gating rule, 
 
 ## Script reference
 
-Full implementation: `scripts/check-copilot-usage.sh` (optional — add to your repo for automated cost-guard). If the script is not present, use the GitHub Copilot web UI at https://github.com/settings/copilot instead.
+Full implementation: `scripts/check-copilot-usage.sh`
 
 The script:
 - Resolves username via `gh api user --jq '.login'` (never hardcoded)
