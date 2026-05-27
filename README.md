@@ -1,6 +1,6 @@
 # orqit
 
-Copilot CLI workflow orchestration plugin for solo founders.
+Copilot CLI workflow orchestration plugin for individual developers.
 
 ## Install
 
