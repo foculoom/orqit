@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "[ -x ./scripts/check-git-cleanliness.sh ] && ./scripts/check-git-cleanliness.sh warn-dirty; exit 0",
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "[ -x ./scripts/check-git-cleanliness.sh ] && ./scripts/check-git-cleanliness.sh return-default-branch; exit 0",
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

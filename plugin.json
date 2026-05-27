@@ -1,0 +1,39 @@
+{
+  "name": "orqit",
+  "description": "AI infra plugin \u2014 conductor/planner/builder/reviewer agents and portable skills for product repos",
+  "version": "1.1.0",
+  "author": {
+    "name": "Foculoom LLC",
+    "url": "https://github.com/foculoom"
+  },
+  "repository": "https://github.com/foculoom/orqit",
+  "homepage": "https://github.com/foculoom/orqit",
+  "license": "MIT",
+  "keywords": [
+    "orqit",
+    "copilot",
+    "infra",
+    "agents",
+    "skills"
+  ],
+  "agents": "agents/",
+  "skills": [
+    "skills/5-whys",
+    "skills/automation-registry",
+    "skills/dev-session",
+    "skills/fallback-mode",
+    "skills/kids-safety",
+    "skills/market-scan",
+    "skills/model-audit",
+    "skills/new-feature",
+    "skills/qa-capture-ios",
+    "skills/qa-validate",
+    "skills/release-post",
+    "skills/reviewer-qa-gate",
+    "skills/risk-review",
+    "skills/ship-issue",
+    "skills/status",
+    "skills/usage"
+  ],
+  "hooks": "hooks.json"
+}
