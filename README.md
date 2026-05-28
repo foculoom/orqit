@@ -1,3 +1,5 @@
+<img src="assets/orqit-icon.png" width="128" alt="orqit icon" />
+
 # orqit
 
 Copilot CLI workflow orchestration plugin for individual developers.
