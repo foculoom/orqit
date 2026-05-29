@@ -59,12 +59,12 @@ These are intentional template markers for customization. The plugin works with 
 
 ## MCP server reference
 
-`.mcp.json` in this repo is a **reference template** for the 4 media MCP servers used alongside this plugin (openai-image, fal-ai, suno, elevenlabs). It is **not** loaded automatically by the plugin.
+`docs/mcp-config.template.json` in this repo is a **reference template** for the 4 media MCP servers used alongside this plugin (openai-image, fal-ai, suno, elevenlabs). It is **not** loaded automatically by the plugin.
 
 To use it, copy it to `~/.copilot/mcp-config.json` (or merge into your existing config) and replace `{YOUR_TOOLS_PATH}` and `{YOUR_BRAND_ASSET_PATH}` with your local paths:
 
 ```bash
-cp .mcp.json ~/.copilot/mcp-config-media.json
+cp docs/mcp-config.template.json ~/.copilot/mcp-config-media.json
 # then merge into ~/.copilot/mcp-config.json manually
 ```
 
