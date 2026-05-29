@@ -56,3 +56,16 @@ Replace the placeholders that apply to your setup:
 | `{YOUR_PINNED_COMMIT}` / `{YOUR_CONTRACT_HASH}` | Your recorded validator commit and contract hash where required |
 
 These are intentional template markers for customization. The plugin works with the placeholders left in place for reference, but replacing them makes the docs and agent prompts match your own infrastructure.
+
+## MCP server reference
+
+`.mcp.json` in this repo is a **reference template** for the 4 media MCP servers used alongside this plugin (openai-image, fal-ai, suno, elevenlabs). It is **not** loaded automatically by the plugin.
+
+To use it, copy it to `~/.copilot/mcp-config.json` (or merge into your existing config) and replace `{YOUR_TOOLS_PATH}` and `{YOUR_BRAND_ASSET_PATH}` with your local paths:
+
+```bash
+cp .mcp.json ~/.copilot/mcp-config-media.json
+# then merge into ~/.copilot/mcp-config.json manually
+```
+
+The `tom/dtwin` MCP server is intentionally excluded — it requires a local dtwin installation with no portable path.
