@@ -360,9 +360,9 @@ Skip if the session was purely research with no new actionable facts.
 
 ### 2. Sync digital twin
 
-```
-Call tom-syncTwin with mode: "incremental"
-```
+> ⚠️ **Availability check required before skipping:** call `tool_search_tool_regex` with pattern `tom.*sync|syncTwin` **before** declaring this step unavailable. Never skip based on memory alone — the tool is an MCP tool, not a CLI command, and is available whenever the MCP server is running. Only skip with an explicit "tool not found" result in hand.
+
+Use the `tom-syncTwin` MCP tool with `mode: "incremental"`.
 
 This ensures the next session can retrieve context from this one via `tom-continuationPrompt`.
 
