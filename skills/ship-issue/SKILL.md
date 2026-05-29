@@ -344,6 +344,40 @@ For each of these, call store_memory if a new fact was discovered:
 
 This ensures the next session doesn't re-discover the same things.
 
+## Step 6.5: Rubber-duck review (mandatory)
+
+**This step is blocking — do not proceed to Step 7 without it.**
+
+Run a rubber-duck review of the implementation before declaring done. The rubber duck is an independent critic in a separate context window and catches blind spots the author misses.
+
+```
+task(agent_type="rubber-duck", description="Pre-ship review", prompt="
+Review the implementation of foculoom-project#{issue_number} before it is presented to the founder for sign-off.
+
+Context:
+- Issue: {issue_title}
+- PR: #{pr_number} in {repo}
+- Acceptance criteria: {acceptance_criteria}
+
+Scope of changes: {brief_description_of_changes}
+
+Please check:
+1. Do the changes actually satisfy each acceptance criterion?
+2. Are there any logic errors, edge cases, or off-by-one issues?
+3. Are there any missing file updates (e.g., stale path refs, missed call sites)?
+4. Any security or data-loss risks introduced?
+
+Bugs and logic errors only — no style comments.
+")
+```
+
+**Exit rules:**
+- **No blocking findings** → proceed to Step 7 (`Ship ✅`)
+- **Blocking findings** → fix them, re-run affected tests/CI, then re-run Step 6.5 once more
+- **Non-blocking findings** → document them in the PR body under `## Known limitations / follow-ups`, then proceed to Step 7
+
+The rubber-duck result (pass/fail + key findings) MUST appear in the PR body or the Ship/Revise recommendation output.
+
 ## Step 7: Ship/Revise recommendation
 
 Output recommendation:
