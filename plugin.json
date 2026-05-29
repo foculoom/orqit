@@ -1,7 +1,7 @@
 {
   "name": "orqit",
   "description": "AI infra plugin \u2014 conductor/planner/builder/reviewer agents and portable skills for product repos",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "author": {
     "name": "Foculoom LLC",
     "url": "https://github.com/foculoom"
