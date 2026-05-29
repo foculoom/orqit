@@ -11,7 +11,7 @@ Implement exactly one issue from `{YOUR_TRACKING_REPO}` in this repo.
 
 ## Behavioral contract
 
-Follow the full PR-SHIPPER contract defined in `{YOUR_TRACKING_REPO}/agents/pr-shipper.md`:
+Follow the full PR-SHIPPER contract defined in `{YOUR_TRACKING_REPO}/agents/pr-shipper.md` (repo-local copy):
 - Work on only one issue at a time.
 - Produce the smallest safe change set.
 - Never auto-merge, auto-deploy, or broaden scope.
