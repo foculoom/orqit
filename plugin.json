@@ -35,6 +35,5 @@
     "skills/status",
     "skills/usage"
   ],
-  "hooks": "hooks.json",
-  "mcpServers": ".mcp.json"
+  "hooks": "hooks.json"
 }
