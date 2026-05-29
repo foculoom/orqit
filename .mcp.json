@@ -1,0 +1,52 @@
+{
+  "mcpServers": {
+    "openai-image": {
+      "type": "stdio",
+      "command": "node",
+      "tools": ["*"],
+      "args": [
+        "--env-file-if-exists", "{YOUR_TOOLS_PATH}/openai-gpt-image-mcp/.env",
+        "{YOUR_TOOLS_PATH}/openai-gpt-image-mcp/dist/index.js"
+      ],
+      "env": {
+        "MCP_HF_WORK_DIR": "{YOUR_BRAND_ASSET_PATH}/generated"
+      }
+    },
+    "fal-ai": {
+      "type": "stdio",
+      "command": "node",
+      "tools": ["*"],
+      "args": [
+        "--env-file-if-exists", "{YOUR_TOOLS_PATH}/fal-mcp/.env",
+        "{YOUR_TOOLS_PATH}/fal-mcp/dist/index.js"
+      ],
+      "env": {
+        "IMAGE_OUTPUT_DIR": "{YOUR_BRAND_ASSET_PATH}/generated"
+      }
+    },
+    "suno": {
+      "type": "stdio",
+      "command": "node",
+      "tools": ["*"],
+      "args": [
+        "--env-file-if-exists", "{YOUR_TOOLS_PATH}/suno-mcp/.env",
+        "{YOUR_TOOLS_PATH}/suno-mcp/dist/index.js"
+      ],
+      "env": {
+        "AUDIO_OUTPUT_DIR": "{YOUR_BRAND_ASSET_PATH}/audio/generated"
+      }
+    },
+    "elevenlabs": {
+      "type": "stdio",
+      "command": "node",
+      "tools": ["*"],
+      "args": [
+        "--env-file-if-exists", "{YOUR_TOOLS_PATH}/elevenlabs-mcp/.env",
+        "{YOUR_TOOLS_PATH}/elevenlabs-mcp/dist/index.js"
+      ],
+      "env": {
+        "AUDIO_OUTPUT_DIR": "{YOUR_BRAND_ASSET_PATH}/audio/generated"
+      }
+    }
+  }
+}
