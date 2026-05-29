@@ -57,7 +57,11 @@ For each work item (issue or new request):
 5. **🛑 FOUNDER GATE — Plan approval.** Stop and surface: spec summary, REVIEWER critique (raw, unfiltered), recommended next move. PLANNER or founder decides which findings to adopt. Do not proceed without explicit approval. If founder approves with adoptions, route back to PLANNER subagent for spec revision before proceeding to step 6.
 6. **BUILDER pass (background subagent).** For approved issue, run `task(agent_type: "builder", mode: "background", ...)` and use the required **BUILDER spawn prompt template** below (must include `WORKTREE_PATH` + `cd "$WORKTREE_PATH"` lines before any edits). While background runs, optionally start parallel BUILDER subagents for independent issues.
 7. **Fresh Evaluator pass + REVIEWER code/QA review (sync subagent).** When BUILDER completes and makes a completion claim ("I'm done" / "all ACs pass"), first spawn a **fresh Evaluator subagent** via `task(agent_type: "general-purpose", ...)` (separate context — must not share BUILDER's reasoning trace) to independently verify the completion claim. The Evaluator must produce a structured verdict: `pass`/`fail` + evidence + `next_action`. This pass is separate from and **prior to** the `reviewer-qa-gate` skill. Only after the Evaluator returns `pass` does CONDUCTOR proceed to spawn REVIEWER for diff review + on-device QA per `reviewer-qa-gate` skill. A failed Evaluator verdict routes back to BUILDER (not to REVIEWER). **Retry cap:** after **2 consecutive Evaluator `fail` verdicts on the same issue**, CONDUCTOR must stop and surface `🛑 GATE: Evaluator failed twice — BUILDER loop capped`. Do not re-dispatch BUILDER without explicit founder authorization. The `reviewer-qa-gate` requirement is not weakened or removed by this step.
-8. **🛑 FOUNDER GATE — Ship/Revise.** Stop and surface: PR link, REVIEWER QA verdict, BUILDER ship/revise recommendation. Founder decides merge.
+8. **🛑 FOUNDER GATE — Ship/Revise.** Stop and surface: PR link, REVIEWER QA verdict, BUILDER ship/revise recommendation. Founder decides merge. **Before surfacing this gate**, read `docs/approval-policy.md` via tool call this session — do not paraphrase from memory.
+
+   The policy allows agent-executed merges when the founder gives **explicit, PR-scoped approval after this gate is surfaced** (e.g., "merge PR #N", "SHIP — proceed with merge on #N"). Generic approval phrases ("I approve", "LGTM") without a specific PR reference are insufficient. When explicit PR-scoped approval is given, execute using the repo-standard non-interactive squash merge: `gh pr merge <N> --squash --delete-branch`; otherwise stop and give the founder the exact command.
+
+   > Source: 5-whys #1495 (2026-05-28) — agents were blocking merges from memory, citing a stale policy paraphrase. Actual policy allows merges with explicit founder approval.
 9. **Close loop.** After founder confirms merge, route remaining issues back to step 2.
 
 ## Founder gates (mandatory stops)
@@ -149,10 +153,13 @@ CONDUCTOR runs locally only. Background BUILDER subagents that need iOS tooling 
 
 ## Quality Reference
 
-Before spawning a REVIEWER subagent for quality-sensitive work in any domain covered by
-`docs/mentor-registry.md` (universe spec, visual assets, brand identity, developer
-plugins, gamification/learning, ADHD/neurodiversity UX), include the relevant mentor
-entry from that file as context in the REVIEWER spawn prompt.
+Before spawning **any quality review agent** (reviewer, code-review, rubber-duck, or general-purpose evaluator) **for the purpose of judging artifact quality against a content domain** (not for mechanical verification, tool capability checks, or generic factual checks), check the domain index in `docs/mentor-registry.md` and include the relevant mentor entry from that file as context in the spawn prompt. The trigger is the content domain being evaluated, not the subagent type.
+
+Applicable domains include (non-exhaustive): universe spec, visual assets, brand identity, developer plugins, gamification/learning, ADHD/neurodiversity UX, **LLM model routing (Domain 11)**, **technical explanation (Domain 19)**, solo-founder product decisions (Domain 18), AI character sprites (Domain 16).
+
+If no registry domain clearly applies, proceed without mentor injection. If multiple domains apply, include all materially relevant entries (primary 2 unless more are clearly needed).
+
+> Source: 5-whys #1494 (2026-05-28) — prior phrasing said "REVIEWER subagent" only; code-review and rubber-duck agent types bypassed the check silently. Extended to all quality review spawns.
 
 ## Handoff Boundary — STOP
 
