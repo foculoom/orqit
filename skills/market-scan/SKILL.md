@@ -14,7 +14,7 @@ tier: extra-premium
 
 ## Escalation — legal/regulatory scans
 
-If a scan is primarily legal or regulatory (for example patent landscape, COPPA compliance, KOSA, tax, or other policy/compliance interpretation), the executing agent must escalate that specific scan to `claude-opus-4.7` before final recommendations.
+If a scan is primarily legal or regulatory (for example patent landscape, COPPA compliance, KOSA, tax, or other policy/compliance interpretation), the executing agent must escalate that specific scan to `claude-opus-4.8` before final recommendations.
 
 Perform a quick external scan before investing in a full spec. Best for R&D bets, platform plays, or ideas where the competitive landscape and build complexity are unclear.
 

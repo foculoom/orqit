@@ -271,8 +271,8 @@ When wind-down triggers, **stop accepting new work** and begin the wind-down seq
 
 Use the Model Routing Matrix below as the single source of truth for picking a model per skill or agent. It supersedes the prior bullet list.
 
-<!-- Last verified against Copilot CLI v1.0.54 on 2026-05-24 -->
-**Last verified:** Copilot CLI **v1.0.54** on 2026-05-24 (issue #1382; pin bump only; CONDUCTOR tier moved from extra-premium to standard per PR #1383 (2026-05-24); claude-opus-4.6 and claude-opus-4.5 now exposed as pin-able task enum IDs (were preview/not exposed at v1.0.51 — see #1231); gpt-5.2/gpt-5.2-codex/gpt-4.1 still in enum pre-June-1 deprecation (confirm removal post-June-1); GPT-5.5 multiplier confirmed 7.5× — re-verify post-June-1; all other routing unchanged). Refresh via the `model-audit` skill (#464) every 7 days (or after any `copilot update` bump, or on any GitHub Copilot changelog entry mentioning model/auto/deprecat/pricing) — see #928 for rationale. Matrix updated with `5-whys` row; no new CLI model-enum verification claimed in this edit.
+<!-- Last verified against Copilot CLI v1.0.56 on 2026-05-30 -->
+**Last verified:** Copilot CLI **v1.0.56** on 2026-05-30 (foculoom/foculoom-project#1528; premium tier bumped from `claude-opus-4.7` to `claude-opus-4.8` — confirmed in task tool enum; all other routing unchanged). Previous: v1.0.54 on 2026-05-24 (issue #1382; CONDUCTOR tier moved from extra-premium to standard per PR #1383; claude-opus-4.6 and claude-opus-4.5 now exposed as pin-able task enum IDs; gpt-5.2/gpt-5.2-codex/gpt-4.1 deprecated effective June 1, 2026). Refresh via the `model-audit` skill (#464) every 7 days (or after any `copilot update` bump, or on any GitHub Copilot changelog entry mentioning model/auto/deprecat/pricing) — see #928 for rationale.
 
 #### Tier Taxonomy (canonical)
 
@@ -282,7 +282,7 @@ Every agent profile and skill SKILL.md declares its tier as follows: skill `SKIL
 |---|---|---|---|---|
 | 1 | **basic** | `claude-haiku-4.5` | 0.33× | usage, model-audit, automation-registry, llc-ops, qa-capture-ios, 5-whys, release-asset-fanout, a11y-godot (OUTLINE), status (Quick mode default) |
 | 2 | **standard** | `claude-sonnet-4.6` | 1× | BUILDER, CONDUCTOR, dev-session, ship-issue, brand-asset-pipeline, release-post, fallback-mode, kids-safety, status (Full mode) |
-| 3 | **premium** | `claude-opus-4.7` | 15× | PLANNER, REVIEWER, new-feature, risk-review |
+| 3 | **premium** | `claude-opus-4.8` | 15× | PLANNER, REVIEWER, new-feature, risk-review |
 | 4 | **extra-premium** | `gpt-5.5` | 7.5× | market-scan |
 | — | **two-pass** | per Matrix row | mixed | reviewer-qa-gate (Sonnet+Opus), qa-validate (Sonnet+Opus), brand-compliance (Sonnet+Opus) |
 
@@ -292,28 +292,28 @@ Every agent profile and skill SKILL.md declares its tier as follows: skill `SKIL
 
 | Skill / Agent | Preferred Model | Reason | Cost-Tier Fallback |
 |---|---|---|---|
-| **agent: planner** | `claude-opus-4.7` | Strategy, spec writing, content judgment | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + mandatory rubber-duck |
+| **agent: planner** | `claude-opus-4.8` | Strategy, spec writing, content judgment | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + mandatory rubber-duck |
 | **agent: builder** | `claude-sonnet-4.6` | Implementation and build/test at standard tier | standard → basic: `/model claude-haiku-4.5` (no effort flag); or `/model auto` → `claude-sonnet-4.5` |
-| **agent: reviewer** | `claude-opus-4.7` | Visual/business judgment, deep audits | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck before every quality verdict |
+| **agent: reviewer** | `claude-opus-4.8` | Visual/business judgment, deep audits | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck before every quality verdict |
 | **agent: conductor** | `claude-sonnet-4.6` | Orchestration, gate reasoning, subagent dispatch — deliberately pinned to standard tier by founder 2026-05-24 (prev: gpt-5.5) | standard → basic: `claude-haiku-4.5` (no effort flag); REVIEWER/PLANNER subagents: premium → standard per fallback-mode SKILL |
 | `a11y-godot` | `claude-haiku-4.5` (while OUTLINE per #947); upgrade to `claude-sonnet-4.6` post-spike | Placeholder checklist; minimal judgment required pending SPIKE-A11Y closure | `claude-haiku-4.5` (while OUTLINE); `/model auto` → `claude-sonnet-4.5` post-#947 |
 | `automation-registry` | `claude-haiku-4.5` | Reference lookup, mechanical | `claude-haiku-4.5` (already cheap) |
 | `brand-asset-pipeline` | `claude-sonnet-4.6` | Visual judgment + tool orchestration | `/model auto` → `claude-sonnet-4.5` |
-| `brand-compliance` | `claude-sonnet-4.6` (checklists); `claude-opus-4.7` for Social Media Art-Director Review (§8) | Visual/brand review; qualitative Art-Director judgment for social | `/model auto` → `claude-sonnet-4.5`; `claude-sonnet-4.6 --effort xhigh` + rubber-duck for Opus-escalation |
+| `brand-compliance` | `claude-sonnet-4.6` (checklists); `claude-opus-4.8` for Social Media Art-Director Review (§8) | Visual/brand review; qualitative Art-Director judgment for social | `/model auto` → `claude-sonnet-4.5`; `claude-sonnet-4.6 --effort xhigh` + rubber-duck for Opus-escalation |
 | `dev-session` | `claude-sonnet-4.6` | Session orchestration | `/model auto` → `claude-sonnet-4.5` |
 | `fallback-mode` | `claude-sonnet-4.6` | Self-referential: the skill IS the fallback | n/a (already at fallback tier) |
 | `kids-safety` | `claude-haiku-4.5` (trivial features only — no data/AI/IAP/UGC); `claude-sonnet-4.6 --effort xhigh` default for non-trivial features | COPPA/KOSA per-feature checklist; $50k/violation risk warrants Sonnet default when feature touches any trigger surface | `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
 | `llc-ops` | `claude-haiku-4.5` | Checklist / date lookup | `claude-haiku-4.5` (already cheap) |
 | `market-scan` | `gpt-5.5` | Research + competitive analysis | extra-premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
 | `model-audit` | `claude-haiku-4.5` | Version diff + template generation | `claude-haiku-4.5` (already cheap) |
-| `new-feature` | `claude-opus-4.7` | PLANNER intake decisioning | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` |
+| `new-feature` | `claude-opus-4.8` | PLANNER intake decisioning | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` |
 | `qa-capture-ios` | `claude-haiku-4.5` | Mechanical `xcrun` commands | `claude-haiku-4.5` (already cheap) |
-| `qa-validate` | `claude-sonnet-4.6` (CLI/platform steps); `claude-opus-4.7` for Sprite Art Gate (§2.5), Walk-Cycle Receipt Subgate (§2.5.1), Art Director Visual Review (§3.5) | Platform detection + test runs; ADA-class visual judgment for art gates | `/model auto` → `claude-sonnet-4.5`; `claude-sonnet-4.6 --effort xhigh` + rubber-duck for Opus-escalation steps |
-| `risk-review` | `claude-opus-4.7` | Sensitive judgment (health/legal/kids) | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
+| `qa-validate` | `claude-sonnet-4.6` (CLI/platform steps); `claude-opus-4.8` for Sprite Art Gate (§2.5), Walk-Cycle Receipt Subgate (§2.5.1), Art Director Visual Review (§3.5) | Platform detection + test runs; ADA-class visual judgment for art gates | `/model auto` → `claude-sonnet-4.5`; `claude-sonnet-4.6 --effort xhigh` + rubber-duck for Opus-escalation steps |
+| `risk-review` | `claude-opus-4.8` | Sensitive judgment (health/legal/kids) | premium → standard: `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck |
 | `5-whys` | `claude-haiku-4.5` | Mechanical root-cause template; escalate when root cause is disputed | `claude-sonnet-4.6` for severity gates (i)-(iii) or disputed root cause |
 | `release-asset-fanout` | `claude-haiku-4.5` | Pure script runner (Pillow resize + manifest JSON write); zero judgment | `claude-haiku-4.5` (already cheap) |
 | `release-post` | `claude-sonnet-4.6` | Content gen + tool orchestration | `/model auto` |
-| `reviewer-qa-gate` | Two-pass: `claude-sonnet-4.6` (items 1–12, 17–20) + `claude-opus-4.7` (items 13–16 HARD-FAIL legal/IP) | Cost-optimized: Sonnet for layout/a11y/polish/kids-product gates; Opus only for mascot visual/voice + legal/IP gate | `claude-sonnet-4.6` + `--effort xhigh` (all items); founder MAY opt into single-Opus pass for operational simplicity |
+| `reviewer-qa-gate` | Two-pass: `claude-sonnet-4.6` (items 1–12, 17–20) + `claude-opus-4.8` (items 13–16 HARD-FAIL legal/IP) | Cost-optimized: Sonnet for layout/a11y/polish/kids-product gates; Opus only for mascot visual/voice + legal/IP gate | `claude-sonnet-4.6` + `--effort xhigh` (all items); founder MAY opt into single-Opus pass for operational simplicity |
 | `ship-issue` | `claude-sonnet-4.6` | BUILDER workflow | `/model auto` → `claude-sonnet-4.5` |
 | `status` | `claude-haiku-4.5` (Quick mode); `claude-sonnet-4.6` (Full mode) | Quick = JSON scan + label classification (mechanical); Full = cross-repo daily brief synthesis | `claude-haiku-4.5` for both modes |
 | `usage` | `claude-haiku-4.5` | Mechanical API call — billing usage check | `claude-haiku-4.5` (already cheap) |
@@ -338,8 +338,9 @@ Registered in `~/.copilot/mcp-config.json`. All output paths are under `~/{YOUR_
 - "Cost-Tier Fallback" applies when spend on the current model tier needs to be reduced; full recipe lives in the `fallback-mode` skill (#463).
 - Per-skill `## Model` blocks (#462) repeat the same values inline; on conflict, this matrix wins.
 - **Audit note (2026-05-20 / #1231):** All explicit task-tool model IDs referenced in the matrix are still present in the current `task` tool roster (v1.0.51 enum: 14 IDs — unchanged from v1.0.48; of which 3 — `gpt-5.2`, `gpt-5.2-codex`, `gpt-4.1` — are deprecated effective June 1, 2026; post-June-1 audit will confirm their removal and reduce the count to 11). Additional exposed IDs — `gpt-5.4`, `gpt-5.4-mini`, `gpt-5-mini` (plus the 3 deprecated above) — remain intentionally unlisted here because no skill currently recommends them as the preferred or fallback route. Auto pool unchanged at 6 models. Raptor mini appeared in Auto-pool YAML with cli:false — no task enum entry, no Matrix action needed. Claude Opus 4.6 (fast mode) (preview) appears in `model-supported-clients.yml` as cli:true but is not exposed as a pin-able task enum ID; no Matrix row will be added until a stable ID is exposed in the task tool enum. GPT-5.5 multiplier confirmed at 7.5× via `model-multipliers.yml` (fetched 2026-05-18); must be re-verified post-June-1 because GitHub docs state multipliers/costs are subject to change.
-- **Audit note (2026-05-24 / #1382):** `claude-opus-4.6` and `claude-opus-4.5` are now pin-able task enum IDs as of CLI v1.0.54 (no longer preview/unexposed). Both are intentionally unlisted in this Matrix — no skill currently recommends them as a preferred or fallback route; all Opus-tier routing uses `claude-opus-4.7`.
-- **Auto model selection (GA 2026-04-17; server-side routing since v1.0.43):** `/model auto` is a viable alternative for most Standard-tier and Mechanical-tier skills. It routes dynamically among models with ≤1× multipliers, chosen in real time by GitHub server-side logic — pool composition can change without a CLI version bump. As of 2026-05-06 (`github/docs` commit [`98afef20`](https://github.com/github/docs/blob/main/data/tables/copilot/auto-model-selection.yml)) the CLI Auto pool contains 6 models: Claude Sonnet 4.6, Claude Haiku 4.5, GPT-5.4, GPT-5.3-Codex, **GPT-5.4 mini**, **GPT-5 mini**. Authoritative live list: [`auto-model-selection.yml`](https://github.com/github/docs/blob/main/data/tables/copilot/auto-model-selection.yml). Paid plans receive a 10% multiplier discount on Auto responses. Auto **cannot reach Opus 4.7** — all Opus-tier skills must stay on explicit model IDs. Keep explicit `claude-haiku-4.5` for any task where zero-premium spend is required.
+- **Audit note (2026-05-30 / foculoom-project#1528):** `claude-opus-4.8` is now the premium-tier model as of CLI v1.0.56. All Matrix rows and agent front-matter pins updated from `claude-opus-4.7`. `claude-opus-4.7` remains a valid task enum ID but is intentionally superseded by 4.8 in all routing. Task tool enum now counts **15 IDs** (was 14 at v1.0.54; +1 for `claude-opus-4.8`). Auto pool still **6 models** — does not include Opus tier. `gpt-5.2`, `gpt-5.2-codex`, and `gpt-4.1` scheduled for removal effective June 1, 2026 — confirm removal via `/model-audit` post-June-1.
+- **Audit note (2026-05-24 / #1382):** `claude-opus-4.6` and `claude-opus-4.5` are now pin-able task enum IDs as of CLI v1.0.54 (no longer preview/unexposed). Both are intentionally unlisted in this Matrix — no skill currently recommends them as a preferred or fallback route; all Opus-tier routing uses `claude-opus-4.8`.
+- **Auto model selection (GA 2026-04-17; server-side routing since v1.0.43):** `/model auto` is a viable alternative for most Standard-tier and Mechanical-tier skills. It routes dynamically among models with ≤1× multipliers, chosen in real time by GitHub server-side logic — pool composition can change without a CLI version bump. As of 2026-05-06 (`github/docs` commit [`98afef20`](https://github.com/github/docs/blob/main/data/tables/copilot/auto-model-selection.yml)) the CLI Auto pool contains 6 models: Claude Sonnet 4.6, Claude Haiku 4.5, GPT-5.4, GPT-5.3-Codex, **GPT-5.4 mini**, **GPT-5 mini**. Authoritative live list: [`auto-model-selection.yml`](https://github.com/github/docs/blob/main/data/tables/copilot/auto-model-selection.yml). Paid plans receive a 10% multiplier discount on Auto responses. Auto **cannot reach Opus 4.8** — all Opus-tier skills must stay on explicit model IDs. Keep explicit `claude-haiku-4.5` for any task where zero-premium spend is required.
 - **Guardrail:** do not pair sticky `--effort xhigh` with `/model auto` (notably inside `/fallback-mode`). Auto may route to `claude-haiku-4.5`, which rejects reasoning effort and can fail the request.
 
 ## Session End
@@ -452,7 +453,7 @@ CONDUCTOR runs the mandatory plan-critique checkpoint (REVIEWER critiques plans)
 - Sessions longer than 15 turns (quality drops sharply)
 - Waiting for auto-compaction at 95% (loses critical early context)
 - Not syncing twin at end of session (next session starts blind)
-- Using Opus 4.7 for routine work (15× vs 1× Sonnet 4.6; Opus 4.5/4.6 are 3×; Opus 4.6 fast mode preview is 30× and is not task-enum pin-able as of v1.0.51). Re-verify after June 1, 2026 because model multipliers and costs are subject to change.
+- Using Opus 4.8 for routine work (15× vs 1× Sonnet 4.6; Opus 4.5/4.6 are 3×; Opus 4.6 fast mode preview is 30× and is not task-enum pin-able as of v1.0.51). Re-verify after June 1, 2026 because model multipliers and costs are subject to change.
 - Re-discovering facts already in repository_memories
 - Re-cloning repos that already exist locally
 - Re-running setup completed in prior sessions

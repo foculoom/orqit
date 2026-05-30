@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: "Use when: evaluating visual/audio quality, defining style guides, reviewing business health, auditing pipeline state, or running /status."
-model: claude-opus-4.7
+model: claude-opus-4.8
 ---
 <!-- tier: premium -->
 
@@ -106,11 +106,11 @@ See also: `agents/reviewer.md` for full contract details.
 
 ## Model & Tools
 
-- **Recommended model:** Claude Opus 4.7 — trend analysis, quality review, and pipeline reasoning.[^model]
+- **Recommended model:** Claude Opus 4.8 — trend analysis, quality review, and pipeline reasoning.[^model]
 - **Fallback-mode active:** step down to standard tier (`claude-sonnet-4.6 --effort xhigh`); add rubber-duck pass before every quality verdict. Every output must include an `Evidence:` block. See `/fallback-mode` step-down table.
 - **Key tools:** image generation (`gpt-image-1`, `fal-ai/flux-kontext/max`), audio (`suno-*`), App Store (`appstore_*`), GitHub (`gh`), `pipeline_status`.
 
-[^model]: Verified against the task-tool enum on 2026-05-18.
+[^model]: Verified against the task-tool enum on 2026-05-30 (CLI v1.0.56, 15 IDs; `claude-opus-4.8` is the current premium-tier pin).
 
 ## Model pinning discipline
 

@@ -22,7 +22,7 @@ Fallback mode reduces the model cost tier for any skill or agent, stepping down 
 
 | Source tier | Example model | Multiplier | → Fallback tier | Fallback multiplier | Cost reduction | Compensation |
 |---|---|---|---|---|---|---|
-| premium | `claude-opus-4.7` | 15× | standard | 1× | ~15× per turn | `--effort xhigh` + rubber-duck + GPT-5.3-Codex for code |
+| premium | `claude-opus-4.8` | 15× | standard | 1× | ~15× per turn | `--effort xhigh` + rubber-duck + GPT-5.3-Codex for code |
 | extra-premium | `gpt-5.5` | 7.5× | standard | 1× | ~7.5× per turn | `--effort xhigh` + rubber-duck |
 | standard | `claude-sonnet-4.6` | 1× | basic | 0.33× | ~3× per turn | model switch only — **do NOT set `--effort xhigh`** (Haiku rejects reasoning effort) |
 

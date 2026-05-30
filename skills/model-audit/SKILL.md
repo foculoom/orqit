@@ -132,9 +132,9 @@ For each skill, spot-check that its declared `tier:` value matches its **Preferr
 |---|---|
 | `basic` | `claude-haiku-4.5` |
 | `standard` | `claude-sonnet-4.6` |
-| `premium` | `claude-opus-4.7` |
+| `premium` | `claude-opus-4.8` |
 | `extra-premium` | `gpt-5.5` |
-| `two-pass` | two model lines (e.g., Sonnet 4.6 + Opus 4.7) |
+| `two-pass` | two model lines (e.g., Sonnet 4.6 + Opus 4.8) |
 
 Drift here goes into the Step 5 draft as a proposed correction.
 

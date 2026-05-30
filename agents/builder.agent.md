@@ -54,11 +54,11 @@ For PRs touching **>3 files** OR containing **product-facing UI changes** OR int
 ```
 task(agent_type: "reviewer",
      description: "pre-PR diff review",
-     model: "claude-opus-4.7",
+     model: "claude-opus-4.8",
      prompt: "Review this diff for bugs, missing tests, and brand/UX defects. Output: BUGS / MISSING_TESTS / UX_ISSUES / SHIP_RECOMMENDATION. Do not modify code.")
 ```
 
-> **Fallback-mode active:** step down to standard tier — replace `model: "claude-opus-4.7"` with `model: "claude-sonnet-4.6" --effort xhigh` and add `task(agent_type: "rubber-duck", ...)` before spawning REVIEWER. Route all non-trivial code edits through `task(agent_type: "task", model: "gpt-5.3-codex", ...)`. See `/fallback-mode` step-down table.
+> **Fallback-mode active:** step down to standard tier — replace `model: "claude-opus-4.8"` with `model: "claude-sonnet-4.6" --effort xhigh` and add `task(agent_type: "rubber-duck", ...)` before spawning REVIEWER. Route all non-trivial code edits through `task(agent_type: "task", model: "gpt-5.3-codex", ...)`. See `/fallback-mode` step-down table.
 
 Adopt findings that prevent regressions. When CONDUCTOR is driving, CONDUCTOR runs this automatically.
 
