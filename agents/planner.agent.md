@@ -1,7 +1,7 @@
 ---
 name: planner
 description: "Use when: triaging ideas, prioritizing work, writing specs, reviewing content quality, and producing issue breakdowns for implementation."
-model: claude-opus-4.7
+model: claude-opus-4.8
 ---
 <!-- tier: premium -->
 
@@ -38,11 +38,11 @@ Before creating GitHub Issues for any spec that has **>3 acceptance criteria** O
 ```
 task(agent_type: "reviewer",
      description: "plan critique",
-     model: "claude-opus-4.7",
+     model: "claude-opus-4.8",
      prompt: "Critique this plan for blindspots, missing ACs, and risks. Output: BLINDSPOTS / RISKS / MISSING_ACS / ADOPT_RECOMMENDATIONS. Do not modify the plan.")
 ```
 
-> **Fallback-mode active:** step down to standard tier — replace `model: "claude-opus-4.7"` with `model: "claude-sonnet-4.6" --effort xhigh` and add `task(agent_type: "rubber-duck", ...)` before and after the critique. See `/fallback-mode` step-down table.
+> **Fallback-mode active:** step down to standard tier — replace `model: "claude-opus-4.8"` with `model: "claude-sonnet-4.6" --effort xhigh` and add `task(agent_type: "rubber-duck", ...)` before and after the critique. See `/fallback-mode` step-down table.
 
 Adopt findings that prevent bugs/test-failures. Document rejected findings briefly. This catches bugs while course-correction is still cheap.
 
@@ -67,11 +67,11 @@ See also: `agents/planner.md` for full contract details.
 
 ## Model & Tools
 
-- **Recommended model:** Claude Opus 4.7 — strategy, spec writing, and content craft require deep reasoning.[^model]
+- **Recommended model:** Claude Opus 4.8 — strategy, spec writing, and content craft require deep reasoning.[^model]
 - **Fallback-mode active:** step down to standard tier (`claude-sonnet-4.6 --effort xhigh`); add rubber-duck before every plan-critique spawn. See `/fallback-mode` step-down table.
 - **Key tools:** GitHub Issues (`gh issue create/list/view`), docs reading (`view`), file creation (`create`), web search, `tom-askTwin`.
 
-[^model]: Verified against the task-tool enum on 2026-05-18.
+[^model]: Verified against the task-tool enum on 2026-05-30 (CLI v1.0.56, 15 IDs; `claude-opus-4.8` is the current premium-tier pin).
 
 ## Model pinning discipline
 

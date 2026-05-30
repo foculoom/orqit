@@ -110,9 +110,9 @@ CONDUCTOR **may proceed without asking** when:
   Run first: cd "$WORKTREE_PATH"
   Then execute the approved BUILDER scope only for this issue.
   ```
-- **Always pin model** in subagent calls when role default differs from CONDUCTOR's needs (e.g., `model: "claude-opus-4.7"` for REVIEWER plan-critique). **Fallback-mode override:** when fallback-mode is active, step down all REVIEWER and PLANNER task() spawns to the standard tier (`model: "claude-sonnet-4.6"`); add mandatory `task(agent_type: "rubber-duck", ...)` after every REVIEWER spawn. See `/fallback-mode` step-down table.
+- **Always pin model** in subagent calls when role default differs from CONDUCTOR's needs (e.g., `model: "claude-opus-4.8"` for REVIEWER plan-critique). **Fallback-mode override:** when fallback-mode is active, step down all REVIEWER and PLANNER task() spawns to the standard tier (`model: "claude-sonnet-4.6"`); add mandatory `task(agent_type: "rubber-duck", ...)` after every REVIEWER spawn. See `/fallback-mode` step-down table.
 - **Cost guard:** drop REVIEWER subagent to `claude-sonnet-4.6 --effort xhigh` when `scripts/check-copilot-usage.sh --model opus --threshold 70` exits 2 (≥70% premium model burn), OR when running ≥3 REVIEWER passes per issue, **OR when fallback-mode is active (hard override — skip usage check)**. Block premium models entirely when exit code is 3 (over quota). Exception for sensitive scope (kids/money/health/legal): plan-critique stays at the strongest _available_ model; under fallback, that is `claude-sonnet-4.6 --effort xhigh` + mandatory rubber-duck (proceed and flag quality risk at the gate).
-- **Escalate to `claude-opus-4.7` when CONDUCTOR itself (not a PLANNER/REVIEWER subagent) performs plan-critique or architectural judgment.** This applies only when the founder explicitly asks for direct in-CONDUCTOR judgment (rather than delegated subagent critique), and is separate from the REVIEWER cost-guard above.
+- **Escalate to `claude-opus-4.8` when CONDUCTOR itself (not a PLANNER/REVIEWER subagent) performs plan-critique or architectural judgment.** This applies only when the founder explicitly asks for direct in-CONDUCTOR judgment (rather than delegated subagent critique), and is separate from the REVIEWER cost-guard above.
 - **Subagent failure:** if a subagent fails or times out, retry once with the same model and prompt. On second failure, escalate to the founder with the error context — do NOT silently re-spawn or continue.
 - **Provide complete context.** Subagents are stateless. Include issue body, prior REVIEWER findings, founder constraints in every spawn prompt.
 - **Session-end ownership:** CONDUCTOR runs the `/dev-session` end-of-session checklist (store memories, sync twin, return to default branch) as the session owner. The founder does not need to manually trigger session-end when CONDUCTOR is driving.
@@ -136,7 +136,7 @@ Next action requires: APPROVE / REVISE / KILL
 ## Model & Tools
 
 - **Default model:** claude-sonnet-4.6 (effort: xhigh) — uses global default; no explicit model pin in front-matter. Orchestration, gate reasoning, and subagent dispatch.
-- **Escalation to `claude-opus-4.7`** when CONDUCTOR itself (not a delegated subagent) performs plan-critique or architectural judgment — only when founder explicitly asks for in-CONDUCTOR judgment.
+- **Escalation to `claude-opus-4.8`** when CONDUCTOR itself (not a delegated subagent) performs plan-critique or architectural judgment — only when founder explicitly asks for in-CONDUCTOR judgment.
 - **Fallback-mode active:** CONDUCTOR's own model steps down to basic tier (`claude-haiku-4.5`, no `--effort xhigh`); step down all REVIEWER and PLANNER task() spawns to standard tier (`claude-sonnet-4.6`); add mandatory `task(agent_type: "rubber-duck", ...)` after every REVIEWER spawn (premium→standard step-down). See `/fallback-mode` step-down table for source-tier → fallback-tier mapping.
 - **Key tools:** `task` (subagent dispatch), `gh` (issues/PRs), `scripts/check-copilot-usage.sh` (cost-guard), `view`/`grep` (read-only audit).
 

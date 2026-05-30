@@ -8,7 +8,7 @@ tier: premium
 
 ## Model
 
-- **Preferred:** `claude-opus-4.7`
+- **Preferred:** `claude-opus-4.8`
 - **Cost-tier fallback:** `claude-sonnet-4.6` + `--effort xhigh` + rubber-duck — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 

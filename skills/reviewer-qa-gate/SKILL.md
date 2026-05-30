@@ -10,7 +10,7 @@ tier: two-pass
 
 - **Preferred:** Two-pass — see `## Two-pass execution` below
   - Pass 1 (items 1–12): `claude-sonnet-4.6`
-  - Pass 2 (items 13–16): `claude-opus-4.7` (HARD-FAIL legal/IP scope)
+  - Pass 2 (items 13–16): `claude-opus-4.8` (HARD-FAIL legal/IP scope)
 - **Cost-tier fallback:** `claude-sonnet-4.6` + `--effort xhigh` (all items) — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
@@ -78,17 +78,17 @@ Run checklist on each required device class. Capture screenshots per `qa-capture
 Use a two-pass split by default to reduce routine QA cost while preserving high-scrutiny review for mascot/legal/IP-sensitive checks:
 
 - **Pass 1 — `claude-sonnet-4.6` (items 1–12, 17–20):** layout, accessibility, polish, and kids-product gates (tap targets, pre-reader affordance, no dark patterns).
-- **Pass 2 — `claude-opus-4.7` (items 13–16):** mascot visual/voice checks plus **HARD-FAIL legal/IP scope** (especially items 15–16).
+- **Pass 2 — `claude-opus-4.8` (items 13–16):** mascot visual/voice checks plus **HARD-FAIL legal/IP scope** (especially items 15–16).
 
 ### Pass 1 ambiguity escalation rule
 
-If any Pass 1 result is ambiguous, borderline, or uncertain, escalate that **specific item** to `claude-opus-4.7` before deciding pass/fail for that item.
+If any Pass 1 result is ambiguous, borderline, or uncertain, escalate that **specific item** to `claude-opus-4.8` before deciding pass/fail for that item.
 
 Worked example: if item **7** returns borderline accessibility contrast, escalate that single item to Opus before deciding pass/fail.
 
 ## Fallback: single-Opus pass
 
-**Founder MAY elect** to run a single `claude-opus-4.7` pass across all items instead of the two-pass split when operational simplicity is more important than cost optimization. This is a deliberate opt-in fallback, not the default path.
+**Founder MAY elect** to run a single `claude-opus-4.8` pass across all items instead of the two-pass split when operational simplicity is more important than cost optimization. This is a deliberate opt-in fallback, not the default path.
 
 ## Capture rule
 

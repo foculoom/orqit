@@ -8,7 +8,7 @@ tier: two-pass
 
 ## Model
 
-- **Preferred:** `claude-sonnet-4.6` (default); escalate to `claude-opus-4.7` for Sprite Art Gate (§2.5), Walk-Cycle Receipt Subgate (§2.5.1), and Art Director Visual Review (§3.5) — ADA-class visual judgment matches the `reviewer-qa-gate` Pass 2 standard
+- **Preferred:** `claude-sonnet-4.6` (default); escalate to `claude-opus-4.8` for Sprite Art Gate (§2.5), Walk-Cycle Receipt Subgate (§2.5.1), and Art Director Visual Review (§3.5) — ADA-class visual judgment matches the `reviewer-qa-gate` Pass 2 standard
 - **Cost-tier fallback:** `/model auto` → `claude-sonnet-4.5`; for Opus-escalation steps use `claude-sonnet-4.6 --effort xhigh` + mandatory rubber-duck — see `/fallback-mode`
 - **Source of truth:** Model Routing Matrix in `.github/skills/dev-session/SKILL.md`
 
